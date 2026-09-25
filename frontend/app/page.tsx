@@ -8,6 +8,7 @@ import { NextBestAction } from "@/components/NextBestAction";
 import { RecoveryJourney } from "@/components/RecoveryJourney";
 import { ResourceCard } from "@/components/ResourceCard";
 import { ScamShield } from "@/components/ScamShield";
+import { HumanEscalation } from "@/components/HumanEscalation";
 import type {
   RecoveryPassport as RecoveryPassportData,
   RecoveryState,
@@ -20,6 +21,7 @@ export default function Home() {
   const [resources, setResources] = useState<ResourceRecommendation[]>([]);
   const [resourcesError, setResourcesError] = useState<string | null>(null);
   const [showScamShield, setShowScamShield] = useState(false);
+  const [showEscalation, setShowEscalation] = useState(false);
 
   async function handleIntakeSuccess(passport: RecoveryPassportData) {
     setRecoveryError(null);
@@ -121,9 +123,25 @@ export default function Home() {
                 ? "Hide scam check"
                 : "Check a suspicious message"}
             </button>
+            <button
+              type="button"
+              onClick={() => setShowEscalation((prev) => !prev)}
+              className="rounded-full border border-primary px-5 py-2.5 text-sm font-semibold text-primary hover:bg-primary/5"
+            >
+              {showEscalation ? "Hide human help" : "Get human help"}
+            </button>
           </div>
 
           {showScamShield && <ScamShield />}
+
+          {showEscalation && (
+            <HumanEscalation
+              passport={recovery.passport}
+              actionsTaken={resources.map(
+                (resource) => `${resource.name} resources reviewed`
+              )}
+            />
+          )}
         </div>
       )}
     </div>
