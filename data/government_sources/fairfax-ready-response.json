@@ -1,0 +1,31 @@
+{
+  "id": "fairfax-ready-response",
+  "title": "Response (During) | Ready Fairfax",
+  "program_name": "Fairfax County Emergency Response Guidance",
+  "agency": "Fairfax County Department of Emergency Management and Security",
+  "source_url": "https://www.fairfaxcounty.gov/emergency/readyfairfax/response",
+  "secondary_urls": [
+    "https://www.fairfaxcounty.gov/topics/alerts"
+  ],
+  "category": "emergency_housing",
+  "jurisdiction": "Fairfax County, VA",
+  "disaster_types": [
+    "flood",
+    "general"
+  ],
+  "needs": [
+    "emergency_housing",
+    "safety"
+  ],
+  "barriers": [
+    "unsafe_home",
+    "displaced"
+  ],
+  "priority": 70,
+  "content": "Fairfax County will open emergency shelters during certain emergencies. Residents should follow instructions from authorities to decide whether to shelter in place or evacuate. When evacuating, grab your go bag and any additional food, cash, and supplies, identify a destination, and advise your out-of-state contact. Bring your emergency go bag to a shelter, including a three-day supply of specialized items, medications, and pet supplies if applicable. For emergencies call 911. The Department of Emergency Management and Security non-emergency line is 571-350-1000. Subscribe to Fairfax Alerts at fairfaxcounty.gov/topics/alerts.",
+  "required_information": [
+    "Emergency go bag with medications and essential items, if available"
+  ],
+  "next_action": "If you are in danger call 911. Otherwise, sign up for Fairfax Alerts to learn when and where county emergency shelters open.",
+  "last_verified": "2026-09-25"
+}

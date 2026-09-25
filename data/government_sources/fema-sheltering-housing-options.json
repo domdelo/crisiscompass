@@ -1,0 +1,36 @@
+{
+  "id": "fema-sheltering-housing-options",
+  "title": "Sheltering and Housing Assistance for Disaster Survivors",
+  "program_name": "FEMA Sheltering and Temporary Housing Assistance",
+  "agency": "Federal Emergency Management Agency",
+  "source_url": "https://www.fema.gov/assistance/individual/sheltering-housing-options",
+  "secondary_urls": [
+    "https://www.fema.gov/fact-sheet/transitional-sheltering-assistance-what-you-need-know-now"
+  ],
+  "category": "emergency_housing",
+  "jurisdiction": "federal",
+  "disaster_types": [
+    "flood",
+    "hurricane",
+    "wildfire",
+    "storm",
+    "general"
+  ],
+  "needs": [
+    "emergency_housing",
+    "temporary_housing"
+  ],
+  "barriers": [
+    "unsafe_home",
+    "displaced"
+  ],
+  "priority": 90,
+  "content": "FEMA may offer several sheltering and housing options for survivors whose primary residence was damaged. Sheltering options include displacement assistance (money that can be used to stay in a hotel or motel or with family and friends), reimbursement of out-of-pocket emergency lodging expenses, and Transitional Sheltering Assistance through participating hotels and motels. Temporary housing options include rental assistance for monthly rent and essential utilities, home repair or replacement funding for homeowners, and direct temporary housing. FEMA states that homeowners and renters may be eligible if their home is determined to be inaccessible or unlivable after a FEMA inspection and their housing needs are not covered by insurance. To find a shelter, text SHELTER and your ZIP code to 43362, check the American Red Cross shelter map, or use the FEMA App.",
+  "required_information": [
+    "Address of the damaged primary residence",
+    "Insurance information, if available",
+    "Receipts for emergency lodging, if requesting reimbursement"
+  ],
+  "next_action": "If you cannot stay in your home tonight, text SHELTER and your ZIP code to 43362 to find an open shelter, then review FEMA's sheltering and housing options.",
+  "last_verified": "2026-09-25"
+}

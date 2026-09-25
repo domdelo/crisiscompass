@@ -1,0 +1,37 @@
+{
+  "id": "fema-individual-assistance",
+  "title": "Individual Assistance",
+  "program_name": "Disaster Assistance",
+  "agency": "Federal Emergency Management Agency",
+  "source_url": "https://www.fema.gov/assistance/individual",
+  "secondary_urls": [
+    "https://www.disasterassistance.gov/"
+  ],
+  "category": "disaster_assistance",
+  "jurisdiction": "federal",
+  "disaster_types": [
+    "flood",
+    "hurricane",
+    "wildfire",
+    "storm",
+    "general"
+  ],
+  "needs": [
+    "emergency_housing",
+    "disaster_assistance",
+    "financial_assistance"
+  ],
+  "barriers": [
+    "unsafe_home",
+    "displaced"
+  ],
+  "priority": 100,
+  "content": "FEMA's Individuals and Households Program (IHP) provides assistance to disaster survivors with uninsured or underinsured necessary expenses and serious needs, including housing and other recovery needs, when federal assistance is available for the disaster. Survivors can call the FEMA Helpline at 800-621-3362. To find an open shelter, text SHELTER and your ZIP code to 4FEMA (43362) or use the FEMA mobile app. After applying, FEMA may contact applicants to verify information or complete a home inspection.",
+  "required_information": [
+    "Disaster location and address of the damaged home",
+    "Description of disaster-related damage and needs",
+    "Insurance information, if available"
+  ],
+  "next_action": "Review FEMA disaster assistance and, if assistance is available for your disaster, apply through DisasterAssistance.gov or the FEMA Helpline (800-621-3362).",
+  "last_verified": "2026-09-25"
+}
