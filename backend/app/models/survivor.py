@@ -1,12 +1,16 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class Household(BaseModel):
-    adults: int | None = None
-    children: int | None = None
+    model_config = ConfigDict(extra="forbid", revalidate_instances="always")
+
+    adults: int | None = Field(default=None, ge=0)
+    children: int | None = Field(default=None, ge=0)
 
 
 class Documents(BaseModel):
+    model_config = ConfigDict(extra="forbid", revalidate_instances="always")
+
     identification: str = "unknown"
     proof_of_residence: str = "unknown"
     damage_documentation: str = "unknown"
@@ -14,6 +18,8 @@ class Documents(BaseModel):
 
 
 class RecoveryPassport(BaseModel):
+    model_config = ConfigDict(extra="forbid", revalidate_instances="always")
+
     disaster: str | None = None
     location: str | None = None
 

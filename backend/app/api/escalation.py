@@ -2,6 +2,7 @@ from fastapi import APIRouter
 from pydantic import BaseModel, Field
 
 from app.models.survivor import RecoveryPassport
+from app.services.escalation_engine import build_escalation_decision
 
 
 router = APIRouter()
@@ -31,47 +32,25 @@ class EscalationResponse(BaseModel):
 
 @router.post("/escalate", response_model=EscalationResponse)
 async def escalate(request: EscalationRequest):
-    """
-    Escalate a survivor case and generate a human handoff summary.
+    """Escalate a survivor case and generate a human handoff summary."""
 
-    This currently creates the summary directly from the
-    Recovery Passport. Human-support integration can replace
-    or extend this implementation later.
-    """
-
-    adults = request.passport.household.adults
-    children = request.passport.household.children
-
-    household_parts = []
-
-    if adults is not None:
-        household_parts.append(f"{adults} adult(s)")
-
-    if children is not None:
-        household_parts.append(f"{children} child(ren)")
-
-    household_summary = (
-        ", ".join(household_parts)
-        if household_parts
-        else "Household details not provided"
+    decision = build_escalation_decision(
+        passport=request.passport,
+        reason=request.reason,
+        actions_taken=request.actions_taken,
     )
-
     summary = HumanHandoffSummary(
         disaster=request.passport.disaster,
-        location=request.passport.location,
-        immediate_needs=request.passport.immediate_needs,
-        household_summary=household_summary,
-        barriers=request.passport.barriers,
-        actions_taken=request.actions_taken,
-        reason_for_escalation=request.reason,
-        sensitive_data_collected=(
-            "No SSN, financial information, full birthdate, "
-            "or exact address collected."
-        )
+        location=decision.location,
+        immediate_needs=decision.immediate_needs,
+        household_summary=decision.household_summary,
+        barriers=decision.barriers,
+        actions_taken=decision.actions_taken,
+        reason_for_escalation=decision.reason_for_escalation,
+        sensitive_data_collected=decision.sensitive_data_collected,
     )
 
     return EscalationResponse(
         escalated=True,
         handoff_summary=summary
     )
-
