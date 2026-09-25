@@ -1,0 +1,35 @@
+{
+  "id": "fema-application-information",
+  "title": "What basic information will I need when I apply?",
+  "program_name": "FEMA Application Checklist",
+  "agency": "Federal Emergency Management Agency",
+  "source_url": "https://www.fema.gov/node/what-basic-information-will-i-need-when-i-apply",
+  "secondary_urls": [],
+  "category": "documentation",
+  "jurisdiction": "federal",
+  "disaster_types": [
+    "general"
+  ],
+  "needs": [
+    "disaster_assistance",
+    "documentation"
+  ],
+  "barriers": [
+    "lost_identification",
+    "missing_documents"
+  ],
+  "priority": 60,
+  "content": "When applying for FEMA assistance, FEMA asks for: your address with ZIP code; the condition of your damaged home, if known; insurance information, if available; Social Security number; a phone number where you can be contacted; an address where you can get mail or an email address to receive electronic notifications; annual household income; and account information if you would like assistance provided through direct deposit. Sensitive information such as a Social Security number or bank account should only be entered on the official FEMA or DisasterAssistance.gov application, never shared with third parties.",
+  "required_information": [
+    "Address with ZIP code",
+    "Condition of your damaged home, if known",
+    "Insurance information, if available",
+    "Social Security number (enter only on the official FEMA/DisasterAssistance.gov application)",
+    "Phone number where you can be contacted",
+    "Mailing address or email for notifications",
+    "Annual household income",
+    "Direct deposit account information, optional (official application only)"
+  ],
+  "next_action": "Gather what you can from this checklist before applying. Enter sensitive details only on the official FEMA or DisasterAssistance.gov application.",
+  "last_verified": "2026-09-25"
+}

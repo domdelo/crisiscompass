@@ -1,127 +1,209 @@
+"""Microsoft Foundry integration for survivor intake."""
+
+from functools import lru_cache
 import json
-import logging
+import re
 
-from openai import AzureOpenAI
+from azure.ai.projects import AIProjectClient
+from azure.core.exceptions import AzureError
+from azure.identity import DefaultAzureCredential
+from openai import OpenAIError
+from pydantic import ValidationError
 
-from app.config import (
-    AZURE_AI_FOUNDRY_API_KEY,
-    AZURE_AI_FOUNDRY_API_VERSION,
-    AZURE_AI_FOUNDRY_DEPLOYMENT,
-    AZURE_AI_FOUNDRY_ENDPOINT,
-    FOUNDRY_CONFIGURED,
+from app.config import FOUNDRY_MODEL_DEPLOYMENT, FOUNDRY_PROJECT_ENDPOINT
+from app.models.survivor import RecoveryPassport
+
+
+SYSTEM_INSTRUCTIONS = """
+You convert a survivor's disaster description into a Recovery Passport.
+
+Extract only facts stated or strongly implied by the survivor. Do not invent a
+location, household count, document status, eligibility, or completed action.
+Use null for unknown scalar values, empty lists when no list items are known,
+and "unknown" for unknown document statuses. Use short snake_case labels for
+immediate_needs and barriers. The next_best_action must be one practical,
+immediate, safety-first step. Do not request or reproduce highly sensitive
+personal data such as Social Security, bank account, or full identification
+numbers. Do not promise aid, eligibility, approval, or legal outcomes.
+
+Location must be null unless the survivor explicitly states a location. Do not
+infer a city, county, state, or region from the disaster. First-person words
+such as "I", "me", or "my" do not establish an adult household count; leave
+adults null unless the survivor explicitly describes the number of adults.
+Never state or imply confirmed government eligibility, approval, or guaranteed
+assistance.
+
+If the survivor reports immediate physical danger or an urgent medical need,
+the next_best_action must prioritize contacting emergency services or urgent
+local human help and clarify that CrisisCompass is not an emergency service.
+
+Normalize equivalent situations consistently:
+- If the survivor cannot safely remain in their home tonight, include
+  "emergency_housing" in immediate_needs and "unsafe_home" in barriers.
+- A lost wallet implies likely lost identification: put only
+  "identification_replacement" in immediate_needs, put
+  "lost_identification" in barriers, and set identification to "missing"
+  unless the survivor explicitly says their ID is elsewhere. Never put
+  "lost_identification" in immediate_needs.
+- Never infer food, clothing, medical, transportation, or financial needs only
+  from the disaster type; include them only when the survivor mentions them.
+""".strip()
+
+
+class FoundryConfigurationError(RuntimeError):
+    """Raised when the Foundry integration is not configured."""
+
+
+class FoundryResponseError(RuntimeError):
+    """Raised when Foundry does not return a usable structured response."""
+
+
+SENSITIVE_OUTPUT_PATTERNS = (
+    re.compile(r"\b\d{3}-\d{2}-\d{4}\b"),
+    re.compile(r"\b\d{8,17}\b"),
 )
 
-logger = logging.getLogger(__name__)
+ELIGIBILITY_CLAIMS = (
+    "you are eligible",
+    "you qualify",
+    "you are approved",
+    "approved for assistance",
+    "guaranteed assistance",
+)
 
-# Keep this vocabulary in sync with app/api/recovery.py's _NEED_STEP_TEMPLATES
-# and the frontend's journeyContent.ts -- a need/barrier the model invents
-# outside this list won't map to a recovery step or journey content.
-_KNOWN_NEEDS = [
-    "emergency_housing", "food", "identification_replacement",
-    "water", "power", "medical_needs",
-]
-_KNOWN_BARRIERS = [
-    "unsafe_home", "lost_identification", "no_transportation",
-    "mobility_limitation",
-]
+EMERGENCY_NEXT_ACTION = (
+    "Contact emergency services or urgent local human help now. "
+    "CrisisCompass is not an emergency service."
+)
 
-_SYSTEM_PROMPT = f"""You are the intake system for CrisisCompass, a disaster \
-assistance navigator. Extract a structured Recovery Passport from a \
-survivor's free-text description of their situation.
+ADULT_COUNT_CUES = re.compile(
+    r"\b(?:\d+|one|two|three|four|five|six|seven|eight|nine|ten)\s+adults?\b"
+    r"|\b(?:spouse|partner|husband|wife)\b"
+    r"|\b(?:live|living) alone\b"
+    r"|\bonly adult\b",
+    re.IGNORECASE,
+)
 
-Rules:
-- Only include a need or barrier if the message actually supports it. \
-Do not guess or assume.
-- immediate_needs must only use values from: {", ".join(_KNOWN_NEEDS)}
-- barriers must only use values from: {", ".join(_KNOWN_BARRIERS)}
-- location: only set if a real place name is mentioned; otherwise null.
-- household.adults / household.children: only set if the message gives a \
-count or clearly implies one (e.g. "alone" means 1 adult); otherwise null.
-- next_best_action: one short, concrete, immediate sentence (e.g. \
-"Find safe housing tonight."). Never a vague statement.
-- documents.identification: "missing" only if the message says ID/wallet/\
-documents were lost; otherwise "unknown". Leave the other three document \
-fields as "unknown" -- this mock doesn't have information about them.
-"""
-
-_PASSPORT_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "disaster": {"type": ["string", "null"]},
-        "location": {"type": ["string", "null"]},
-        "household": {
-            "type": "object",
-            "properties": {
-                "adults": {"type": ["integer", "null"]},
-                "children": {"type": ["integer", "null"]},
-            },
-            "required": ["adults", "children"],
-            "additionalProperties": False,
-        },
-        "immediate_needs": {"type": "array", "items": {"type": "string"}},
-        "barriers": {"type": "array", "items": {"type": "string"}},
-        "documents": {
-            "type": "object",
-            "properties": {
-                "identification": {"type": "string"},
-                "proof_of_residence": {"type": "string"},
-                "damage_documentation": {"type": "string"},
-                "insurance_claim": {"type": "string"},
-            },
-            "required": [
-                "identification", "proof_of_residence",
-                "damage_documentation", "insurance_claim",
-            ],
-            "additionalProperties": False,
-        },
-        "next_best_action": {"type": ["string", "null"]},
-    },
-    "required": [
-        "disaster", "location", "household", "immediate_needs",
-        "barriers", "documents", "next_best_action",
-    ],
-    "additionalProperties": False,
+GENERIC_LOCATION_WORDS = {
+    "city",
+    "county",
+    "state",
+    "united",
+    "states",
+    "usa",
 }
 
-_client: AzureOpenAI | None = None
 
-if FOUNDRY_CONFIGURED:
-    _client = AzureOpenAI(
-        azure_endpoint=AZURE_AI_FOUNDRY_ENDPOINT,
-        api_key=AZURE_AI_FOUNDRY_API_KEY,
-        api_version=AZURE_AI_FOUNDRY_API_VERSION,
+@lru_cache
+def _get_project_client() -> AIProjectClient:
+    if not FOUNDRY_PROJECT_ENDPOINT:
+        raise FoundryConfigurationError(
+            "FOUNDRY_PROJECT_ENDPOINT is not configured"
+        )
+
+    return AIProjectClient(
+        endpoint=FOUNDRY_PROJECT_ENDPOINT,
+        credential=DefaultAzureCredential(),
     )
 
 
-def generate_recovery_passport(message: str) -> dict | None:
-    """
-    Ask the Foundry-hosted model to extract a Recovery Passport from a
-    survivor's message. Returns None (instead of raising) on any failure
-    -- misconfiguration, network error, bad response -- so callers can
-    fall back to the rule-based mock and the demo never hard-fails.
-    """
+def _location_is_supported(location: str, message: str) -> bool:
+    location_words = re.findall(r"[a-z]+", location.lower())
+    specific_words = [
+        word
+        for word in location_words
+        if len(word) > 2 and word not in GENERIC_LOCATION_WORDS
+    ]
+    message_words = set(re.findall(r"[a-z]+", message.lower()))
+    return bool(specific_words) and all(
+        word in message_words for word in specific_words
+    )
 
-    if _client is None:
-        return None
+
+def _apply_output_guardrails(
+    passport: RecoveryPassport,
+    message: str,
+) -> RecoveryPassport:
+    serialized = passport.model_dump_json()
+    if any(pattern.search(serialized) for pattern in SENSITIVE_OUTPUT_PATTERNS):
+        raise FoundryResponseError("Foundry returned sensitive data")
+
+    next_action = (passport.next_best_action or "").lower()
+    if any(claim in next_action for claim in ELIGIBILITY_CLAIMS):
+        raise FoundryResponseError("Foundry returned an unsupported claim")
+
+    updates = {}
+    if passport.location and not _location_is_supported(
+        passport.location,
+        message,
+    ):
+        updates["location"] = None
+
+    if (
+        passport.household.adults is not None
+        and not ADULT_COUNT_CUES.search(message)
+    ):
+        updates["household"] = passport.household.model_copy(
+            update={"adults": None}
+        )
+
+    normalized_needs = {
+        need.strip().lower() for need in passport.immediate_needs
+    }
+    normalized_barriers = {
+        barrier.strip().lower() for barrier in passport.barriers
+    }
+    if (
+        "medical_care" in normalized_needs
+        or "urgent_medical_need" in normalized_barriers
+        or "immediate_danger" in normalized_barriers
+    ):
+        updates["next_best_action"] = EMERGENCY_NEXT_ACTION
+
+    return passport.model_copy(update=updates) if updates else passport
+
+
+def generate_recovery_passport(message: str) -> RecoveryPassport:
+    """Generate and validate a Recovery Passport from survivor-provided text."""
+
+    if not FOUNDRY_MODEL_DEPLOYMENT:
+        raise FoundryConfigurationError(
+            "FOUNDRY_MODEL_DEPLOYMENT is not configured"
+        )
 
     try:
-        response = _client.chat.completions.create(
-            model=AZURE_AI_FOUNDRY_DEPLOYMENT,
-            messages=[
-                {"role": "system", "content": _SYSTEM_PROMPT},
-                {"role": "user", "content": message},
-            ],
-            response_format={
-                "type": "json_schema",
-                "json_schema": {
-                    "name": "recovery_passport",
-                    "strict": True,
-                    "schema": _PASSPORT_SCHEMA,
-                },
-            },
+        openai_client = _get_project_client().get_openai_client()
+        response = openai_client.responses.parse(
+            model=FOUNDRY_MODEL_DEPLOYMENT,
+            instructions=SYSTEM_INSTRUCTIONS,
+            input=message,
+            text_format=RecoveryPassport,
+            temperature=0,
         )
-        content = response.choices[0].message.content
-        return json.loads(content) if content else None
-    except Exception:
-        logger.exception("Foundry intake call failed; falling back to mock")
-        return None
+    except (
+        AzureError,
+        OpenAIError,
+        ValidationError,
+        json.JSONDecodeError,
+        TimeoutError,
+    ) as exc:
+        raise FoundryResponseError(
+            "Foundry request failed"
+        ) from exc
+
+    passport = getattr(response, "output_parsed", None)
+    if passport is None:
+        raise FoundryResponseError(
+            "Foundry returned no structured Recovery Passport"
+        )
+
+    # The SDK parser normally returns this exact model. Re-validation keeps the
+    # service boundary explicit and protects callers if an SDK adapter changes.
+    try:
+        validated_passport = RecoveryPassport.model_validate(passport)
+    except ValidationError as exc:
+        raise FoundryResponseError(
+            "Foundry returned an invalid Recovery Passport"
+        ) from exc
+
+    return _apply_output_guardrails(validated_passport, message)

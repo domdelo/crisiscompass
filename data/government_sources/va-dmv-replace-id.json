@@ -1,0 +1,31 @@
+{
+  "id": "va-dmv-replace-id",
+  "title": "Replace Your Identification Card",
+  "program_name": "Virginia ID Card Replacement",
+  "agency": "Virginia Department of Motor Vehicles",
+  "source_url": "https://www.dmv.virginia.gov/licenses-ids/id-cards/replacement-id",
+  "secondary_urls": [
+    "https://www.dmv.virginia.gov/online-services/replace-id"
+  ],
+  "category": "identification",
+  "jurisdiction": "Virginia",
+  "disaster_types": [
+    "general"
+  ],
+  "needs": [
+    "identification_replacement"
+  ],
+  "barriers": [
+    "lost_identification"
+  ],
+  "priority": 80,
+  "content": "If your Virginia ID card is lost, stolen, or damaged, you may get a replacement. A replacement ID card costs $10. You can replace it online unless certain conditions apply, such as name changes, expired cards, age restrictions, or outstanding DMV balances. In person at a customer service center, complete the Driver's License and Identification Card Application (DL1P), present one proof of identity document, have a new photo taken, and pay the $10 fee. The replacement card is mailed to you; the U.S. Postal Service does not forward IDs, so notify DMV promptly if you have moved.",
+  "required_information": [
+    "Driver's License and Identification Card Application (DL1P) (in person)",
+    "One proof of identity document (in person)",
+    "Replacement fee ($10)",
+    "Current mailing address"
+  ],
+  "next_action": "Check whether you can replace your Virginia ID card online; if you are displaced, make sure DMV has a mailing address where you can receive it.",
+  "last_verified": "2026-09-25"
+}

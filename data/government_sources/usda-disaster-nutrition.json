@@ -1,0 +1,30 @@
+{
+  "id": "usda-disaster-nutrition",
+  "title": "USDA Disaster Nutrition Assistance Programs",
+  "program_name": "Disaster SNAP (D-SNAP) and USDA Disaster Nutrition Assistance",
+  "agency": "U.S. Department of Agriculture",
+  "source_url": "https://www.fna.usda.gov/disaster/nutrition-assistance-programs",
+  "secondary_urls": [],
+  "category": "food",
+  "jurisdiction": "federal",
+  "disaster_types": [
+    "flood",
+    "hurricane",
+    "general"
+  ],
+  "needs": [
+    "food"
+  ],
+  "barriers": [
+    "displaced",
+    "lost_income"
+  ],
+  "priority": 80,
+  "content": "The Disaster Supplemental Nutrition Assistance Program (D-SNAP) is activated following major disasters and has provided benefits to eligible individuals who were not eligible for regular SNAP benefits but experienced disaster-related expenses. USDA also operates the Disaster Household Distribution Program and supports congregate feeding. USDA works through state and local partners to distribute aid. USDA advises: if you are in need of food for your family following a disaster, contact the disaster relief organization in your area to determine where you can find food assistance.",
+  "required_information": [
+    "Disaster location",
+    "Household size"
+  ],
+  "next_action": "Contact your local disaster relief organization or Department of Social Services to find food assistance and to learn whether D-SNAP has been activated for your area.",
+  "last_verified": "2026-09-25"
+}

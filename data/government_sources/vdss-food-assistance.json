@@ -1,0 +1,32 @@
+{
+  "id": "vdss-food-assistance",
+  "title": "Food Assistance - Virginia Department of Social Services",
+  "program_name": "Virginia SNAP and Food Assistance",
+  "agency": "Virginia Department of Social Services",
+  "source_url": "https://www.dss.virginia.gov/relief/food-assistance/",
+  "secondary_urls": [
+    "https://commonhelp.virginia.gov/",
+    "https://www.dss.virginia.gov/localagency/",
+    "https://vafoodbanks.org/find-food"
+  ],
+  "category": "food",
+  "jurisdiction": "Virginia",
+  "disaster_types": [
+    "general"
+  ],
+  "needs": [
+    "food"
+  ],
+  "barriers": [
+    "lost_income",
+    "displaced"
+  ],
+  "priority": 75,
+  "content": "The Virginia Department of Social Services offers food assistance programs including SNAP, which helps lower-income individuals and families buy healthy food with benefits loaded onto an EBT card. Apply online through CommonHelp (commonhelp.virginia.gov), or contact your local Department of Social Services to request an application by phone or paper. Seven regional food banks serve communities across Virginia through the Federation of Virginia Food Banks, which offers a find-food locator.",
+  "required_information": [
+    "Household size",
+    "Contact information"
+  ],
+  "next_action": "For food today, use the Federation of Virginia Food Banks locator. To apply for SNAP, use CommonHelp or contact your local Department of Social Services.",
+  "last_verified": "2026-09-25"
+}
