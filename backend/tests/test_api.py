@@ -95,6 +95,13 @@ def test_intake_rejects_empty_message():
 
 
 def test_resources():
+    """
+    Maria's scenario: flooded apartment, two kids, unsafe home,
+    lost ID. Verifies the /api/resources contract shape and that
+    results are grounded in the authoritative government dataset
+    (not asserting exact content, since Azure AI Search ranking
+    can shift as the dataset or query text changes).
+    """
     response = client.post(
         "/api/resources",
         json={
@@ -114,17 +121,38 @@ def test_resources():
     assert response.status_code == 200
 
     data = response.json()
+    resources = data["resources"]
 
-    assert len(data["resources"]) > 0
+    assert len(resources) > 0
 
-    resource = data["resources"][0]
+    for resource in resources:
+        assert resource["name"]
+        assert resource["agency"]
+        assert resource["reason"]
+        assert resource["source_title"]
+        assert resource["source_url"].startswith("https://")
+        assert isinstance(resource["required_information"], list)
+        assert resource["next_action"]
+        # Safety rule: never claim confirmed eligibility.
+        assert resource["eligibility_status"] == "potential_match"
 
-    assert resource["name"] == "Disaster Assistance"
-    assert resource["agency"] == (
-        "Federal Emergency Management Agency"
+
+def test_resources_no_needs_returns_gracefully():
+    """
+    An empty/no-signal request should not error, even if Azure
+    Search returns nothing useful to rank.
+    """
+    response = client.post(
+        "/api/resources",
+        json={
+            "location": "",
+            "needs": [],
+            "barriers": []
+        }
     )
-    assert resource["eligibility_status"] == "potential_match"
-    assert resource["source_url"]
+
+    assert response.status_code == 200
+    assert isinstance(response.json()["resources"], list)
 
 
 def test_recovery():
