@@ -194,13 +194,24 @@ def test_recovery():
 
     data = response.json()
 
-    assert len(data["plan"]) == 5
+    assert set(data) == {
+        "passport",
+        "plan",
+        "resources",
+        "next_best_action",
+    }
+    assert data["passport"] == MARIA_PASSPORT
+    assert data["resources"] == []
+    assert len(data["plan"]) == 3
 
     assert data["plan"][0]["category"] == "housing"
+    assert data["plan"][1]["category"] == "food"
+    assert data["plan"][2]["category"] == "documents"
+    assert all(step["status"] == "pending" for step in data["plan"])
 
     assert (
         data["next_best_action"]
-        == "Find safe housing tonight."
+        == "Find safe emergency housing."
     )
 
 
