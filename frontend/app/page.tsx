@@ -1,19 +1,23 @@
 "use client";
 
 import { useState } from "react";
-import { ApiError, buildRecoveryPlan } from "@/lib/api";
+import { ApiError, buildRecoveryPlan, getResources } from "@/lib/api";
 import { IntakeForm } from "@/components/IntakeForm";
 import { RecoveryPassport } from "@/components/RecoveryPassport";
 import { NextBestAction } from "@/components/NextBestAction";
 import { RecoveryJourney } from "@/components/RecoveryJourney";
+import { ResourceCard } from "@/components/ResourceCard";
 import type {
   RecoveryPassport as RecoveryPassportData,
   RecoveryState,
+  ResourceRecommendation,
 } from "@/lib/types";
 
 export default function Home() {
   const [recovery, setRecovery] = useState<RecoveryState | null>(null);
   const [recoveryError, setRecoveryError] = useState<string | null>(null);
+  const [resources, setResources] = useState<ResourceRecommendation[]>([]);
+  const [resourcesError, setResourcesError] = useState<string | null>(null);
 
   async function handleIntakeSuccess(passport: RecoveryPassportData) {
     setRecoveryError(null);
@@ -25,6 +29,22 @@ export default function Home() {
         error instanceof ApiError
           ? error.message
           : "We saved your situation, but couldn't build your recovery plan. Please try again."
+      );
+      return;
+    }
+
+    try {
+      const { resources: found } = await getResources({
+        location: passport.location ?? "",
+        needs: passport.immediate_needs,
+        barriers: passport.barriers,
+      });
+      setResources(found);
+    } catch (error) {
+      setResourcesError(
+        error instanceof ApiError
+          ? error.message
+          : "Couldn't load trusted resources right now."
       );
     }
   }
@@ -62,6 +82,32 @@ export default function Home() {
           )}
 
           <RecoveryJourney steps={recovery.plan} />
+
+          <section aria-label="Trusted Resources" className="w-full">
+            <h2 className="text-xs font-semibold uppercase tracking-wide text-muted">
+              Trusted Resources
+            </h2>
+
+            {resourcesError && (
+              <p role="alert" className="mt-2 text-sm text-danger">
+                {resourcesError}
+              </p>
+            )}
+
+            {resources.length > 0 ? (
+              <ul className="mt-3 flex flex-col gap-4">
+                {resources.map((resource) => (
+                  <ResourceCard key={resource.name} resource={resource} />
+                ))}
+              </ul>
+            ) : (
+              !resourcesError && (
+                <p className="mt-2 text-sm text-muted">
+                  No resources found yet for your situation.
+                </p>
+              )
+            )}
+          </section>
         </div>
       )}
     </div>
