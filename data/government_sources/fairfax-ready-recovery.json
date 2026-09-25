@@ -1,0 +1,31 @@
+{
+  "id": "fairfax-ready-recovery",
+  "title": "Recovery (After) | Ready Fairfax",
+  "program_name": "Fairfax County Disaster Recovery Guidance",
+  "agency": "Fairfax County Department of Emergency Management and Security",
+  "source_url": "https://www.fairfaxcounty.gov/emergency/readyfairfax/recovery",
+  "secondary_urls": [],
+  "category": "documentation",
+  "jurisdiction": "Fairfax County, VA",
+  "disaster_types": [
+    "flood",
+    "general"
+  ],
+  "needs": [
+    "documentation",
+    "disaster_assistance",
+    "damage_documentation"
+  ],
+  "barriers": [
+    "unsafe_home"
+  ],
+  "priority": 65,
+  "content": "Before cleanup, make sure all utilities are turned off and verify the building is safe before you enter. Wear heavy-duty gloves, waterproof boots, and N95 dust masks. File insurance claims promptly by contacting your provider. Photograph or video all damage and create lists of damaged items, including model numbers, estimated value, and photos. Fairfax County operates a Disaster Damage Database System where residents can report damage. When federal assistance is available, register with FEMA at DisasterAssistance.gov or FEMA.gov. Fairfax County Emergency Management: 571-350-1000 (Mon-Fri, 8 a.m.-4:30 p.m.), dems@fairfaxcounty.gov. FEMA: 800-621-3362.",
+  "required_information": [
+    "Photos or video of damage",
+    "List of damaged items with estimated value",
+    "Insurance policy information, if available"
+  ],
+  "next_action": "Only return when the building is confirmed safe. Photograph all damage and contact your insurance provider to start a claim.",
+  "last_verified": "2026-09-25"
+}

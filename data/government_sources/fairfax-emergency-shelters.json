@@ -1,0 +1,30 @@
+{
+  "id": "fairfax-emergency-shelters",
+  "title": "Emergency Shelters",
+  "program_name": "Fairfax County Emergency Shelters",
+  "agency": "Fairfax County Office to Prevent and End Homelessness",
+  "source_url": "https://www.fairfaxcounty.gov/homeless/emergency-shelters",
+  "secondary_urls": [],
+  "category": "emergency_housing",
+  "jurisdiction": "Fairfax County, VA",
+  "disaster_types": [
+    "flood",
+    "general"
+  ],
+  "needs": [
+    "emergency_housing"
+  ],
+  "barriers": [
+    "unsafe_home",
+    "displaced",
+    "children_in_household"
+  ],
+  "priority": 95,
+  "content": "Fairfax County families with children seeking emergency shelter can contact Coordinated Services Planning at 703-222-0880 (TTY 711), Monday through Friday, 8 a.m. to 4:30 p.m. A specialist will assess needs and determine shelter eligibility. After hours, families can go to the nearest family shelter: Katherine K. Hanley Family Shelter (Fairfax) 571-522-6800; Fair Ridge Shelter (Fairfax) 703-536-2155; Next Steps Family Program (Alexandria) 703-360-1727. Adults without children can call Bailey's Shelter and Supportive Housing (703-820-7621), Eleanor U. Kennedy Shelter (703-799-0200), or Embry Rucker Community Shelter (703-437-1975). Overflow capacity operates during extreme weather; register for alerts by texting FFXOPEH to 888-777. Domestic violence survivors can call the 24-hour hotline at 703-360-7273.",
+  "required_information": [
+    "Household size, including number of children",
+    "A phone number where you can be reached"
+  ],
+  "next_action": "Families with children: call Coordinated Services Planning at 703-222-0880 (Mon-Fri, 8 a.m.-4:30 p.m.). After hours, contact the nearest family shelter listed on the county page.",
+  "last_verified": "2026-09-25"
+}

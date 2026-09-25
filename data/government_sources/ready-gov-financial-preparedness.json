@@ -1,0 +1,27 @@
+{
+  "id": "ready-gov-financial-preparedness",
+  "title": "Financial Preparedness",
+  "program_name": "Important Documents for Disaster Recovery",
+  "agency": "Ready.gov (Federal Emergency Management Agency)",
+  "source_url": "https://www.ready.gov/financial-preparedness",
+  "secondary_urls": [],
+  "category": "documentation",
+  "jurisdiction": "federal",
+  "disaster_types": [
+    "general"
+  ],
+  "needs": [
+    "documentation"
+  ],
+  "barriers": [
+    "lost_identification",
+    "missing_documents"
+  ],
+  "priority": 40,
+  "content": "Store important documents such as insurance policies, deeds, property records and other important papers in a safe place away from your home, and make copies of important documents for your disaster supplies kit. Having such information handy should make the registration process for FEMA benefits smoother if you are affected by a presidentially declared disaster. Homeowners policies typically do not cover flooding; flood insurance is purchased separately.",
+  "required_information": [
+    "Copies of insurance policies and property or lease records, if available"
+  ],
+  "next_action": "List which important documents were lost so you can prioritize replacing them, starting with identification.",
+  "last_verified": "2026-09-25"
+}
