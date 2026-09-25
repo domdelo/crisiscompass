@@ -1,0 +1,25 @@
+{
+  "id": "ftc-fema-impersonators",
+  "title": "Spot and avoid FEMA impersonators",
+  "program_name": "Disaster Scam and FEMA Impersonator Guidance",
+  "agency": "Federal Trade Commission",
+  "source_url": "https://consumer.ftc.gov/consumer-alerts/2025/07/spot-avoid-fema-impersonators",
+  "secondary_urls": [
+    "https://reportfraud.ftc.gov/",
+    "https://www.fema.gov/assistance/individual/disaster-fraud"
+  ],
+  "category": "fraud_prevention",
+  "jurisdiction": "federal",
+  "disaster_types": [
+    "general"
+  ],
+  "needs": [
+    "scam_protection"
+  ],
+  "barriers": [],
+  "priority": 50,
+  "content": "Scammers pretending to be FEMA may ask for cash payments upfront for disaster assistance, home inspections, or grants, or ask for banking information or personal financial details. Red flags include unsolicited calls or texts claiming to be from FEMA (the agency only contacts those who applied) and fake or hastily made identification badges. FEMA employees will never ask for money for any assistance-related services or inspections. Ask to see official badges with names and photos, call FEMA directly at 1-800-621-FEMA to confirm, and ignore unexpected contact you did not initiate. Report suspected FEMA impersonators at ReportFraud.ftc.gov.",
+  "required_information": [],
+  "next_action": "Do not pay or share personal information. Verify by calling FEMA directly at 1-800-621-3362 and report suspected impersonators at ReportFraud.ftc.gov.",
+  "last_verified": "2026-09-25"
+}

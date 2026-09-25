@@ -150,6 +150,13 @@ def test_intake_returns_safe_error_when_foundry_is_unavailable(monkeypatch):
 
 
 def test_resources():
+    """
+    Maria's scenario: flooded apartment, two kids, unsafe home,
+    lost ID. Verifies the /api/resources contract shape and that
+    results are grounded in the authoritative government dataset
+    (not asserting exact content, since Azure AI Search ranking
+    can shift as the dataset or query text changes).
+    """
     response = client.post(
         "/api/resources",
         json={
@@ -169,17 +176,88 @@ def test_resources():
     assert response.status_code == 200
 
     data = response.json()
+    resources = data["resources"]
 
-    assert len(data["resources"]) > 0
+    assert len(resources) > 0
 
-    resource = data["resources"][0]
+    for resource in resources:
+        assert resource["name"]
+        assert resource["agency"]
+        assert resource["reason"]
+        assert resource["source_title"]
+        assert resource["source_url"].startswith("https://")
+        assert isinstance(resource["required_information"], list)
+        assert resource["next_action"]
+        # Safety rule: never claim confirmed eligibility.
+        assert resource["eligibility_status"] == "potential_match"
 
-    assert resource["name"] == "Disaster Assistance"
-    assert resource["agency"] == (
-        "Federal Emergency Management Agency"
+
+def test_resources_no_needs_returns_gracefully():
+    """
+    An empty/no-signal request should not error, even if Azure
+    Search returns nothing useful to rank.
+    """
+    response = client.post(
+        "/api/resources",
+        json={
+            "location": "",
+            "needs": [],
+            "barriers": []
+        }
     )
-    assert resource["eligibility_status"] == "potential_match"
-    assert resource["source_url"]
+
+    assert response.status_code == 200
+    assert isinstance(response.json()["resources"], list)
+
+
+def test_resources_handles_search_service_failure(monkeypatch):
+    """
+    If Azure AI Search is down/misconfigured/throttled, the API
+    must still respond gracefully rather than 500ing on a survivor.
+    """
+    import app.services.search as search_module
+
+    class FailingClient:
+        def search(self, **kwargs):
+            raise Exception("simulated Azure AI Search outage")
+
+    monkeypatch.setattr(search_module, "_get_client", lambda: FailingClient())
+
+    response = client.post(
+        "/api/resources",
+        json={
+            "location": "Fairfax County, VA",
+            "needs": ["emergency_housing"],
+            "barriers": []
+        }
+    )
+
+    assert response.status_code == 200
+    assert response.json()["resources"] == []
+
+
+def test_resources_rejects_malformed_request():
+    """location is a required field on the shared contract."""
+    response = client.post(
+        "/api/resources",
+        json={
+            "needs": ["food"]
+        }
+    )
+
+    assert response.status_code == 422
+
+
+def test_resources_rejects_wrong_types():
+    response = client.post(
+        "/api/resources",
+        json={
+            "location": "Fairfax County, VA",
+            "needs": "emergency_housing"  # should be a list, not a string
+        }
+    )
+
+    assert response.status_code == 422
 
 
 def test_recovery():
@@ -216,6 +294,11 @@ def test_recovery():
 
 
 def test_scam_check():
+    """
+    Maria's scenario: a message impersonating FEMA that demands an
+    upfront payment. Should trigger multiple grounded warning signs
+    and a possible_scam risk level.
+    """
     response = client.post(
         "/api/scam-check",
         json={
@@ -231,10 +314,54 @@ def test_scam_check():
     data = response.json()
 
     assert data["risk"] == "possible_scam"
+    assert len(data["warning_signs"]) >= 2
+    assert any("payment" in w.lower() for w in data["warning_signs"])
+    assert data["recommendation"]
+    assert data["source_title"]
+    assert data["source_url"].startswith("https://")
 
-    assert "Requests payment" in data["warning_signs"]
 
-    assert data["source_url"]
+def test_scam_check_flags_suspicious_link():
+    response = client.post(
+        "/api/scam-check",
+        json={
+            "message": (
+                "Your disaster relief payment is ready. Click here to "
+                "claim it now: http://fema-relief-claims.info/verify"
+            )
+        }
+    )
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert data["risk"] in ("possible_scam", "suspicious")
+    assert any("link" in w.lower() for w in data["warning_signs"])
+
+
+def test_scam_check_does_not_flag_benign_message():
+    """
+    Scam Shield should not cry wolf on ordinary disaster-related
+    messages that show none of the tracked warning signs.
+    """
+    response = client.post(
+        "/api/scam-check",
+        json={
+            "message": (
+                "Hi, this is a reminder that the Fairfax County "
+                "emergency shelter on Main Street is open tonight for "
+                "anyone who needs a safe place to stay."
+            )
+        }
+    )
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert data["risk"] == "no_warning_signs_detected"
+    assert data["warning_signs"] == []
 
 
 def test_scam_check_rejects_empty_message():
@@ -245,6 +372,11 @@ def test_scam_check_rejects_empty_message():
         }
     )
 
+    assert response.status_code == 422
+
+
+def test_scam_check_rejects_missing_message():
+    response = client.post("/api/scam-check", json={})
     assert response.status_code == 422
 
 

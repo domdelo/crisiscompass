@@ -1,6 +1,8 @@
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
 
+from app.services.scam_engine import analyze_message
+
 
 router = APIRouter()
 
@@ -22,21 +24,10 @@ async def scam_check(request: ScamCheckRequest):
     """
     Analyze a suspicious disaster-related message.
 
-    This currently returns mocked demo data.
-    Grounded fraud detection will replace this implementation later.
+    Grounded in FTC/FEMA fraud guidance via
+    app/services/scam_engine.py. Explainable rule-based detection,
+    not a black-box classifier.
     """
 
-    return ScamCheckResponse(
-        risk="possible_scam",
-        warning_signs=[
-            "Requests payment",
-            "Uses an unverified link",
-            "Creates urgency around receiving assistance"
-        ],
-        recommendation=(
-            "Do not send money or sensitive information. "
-            "Verify disaster assistance through official government sources."
-        ),
-        source_title="FEMA Disaster Fraud Guidance",
-        source_url="https://www.fema.gov/disaster-fraud"
-    )
+    result = analyze_message(request.message)
+    return ScamCheckResponse(**result)

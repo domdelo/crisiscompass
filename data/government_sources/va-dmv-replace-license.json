@@ -1,0 +1,30 @@
+{
+  "id": "va-dmv-replace-license",
+  "title": "Replace Your Driver's License or Learner's Permit",
+  "program_name": "Virginia Driver's License Replacement",
+  "agency": "Virginia Department of Motor Vehicles",
+  "source_url": "https://www.dmv.virginia.gov/licenses-ids/license/replace",
+  "secondary_urls": [
+    "https://www.dmv.virginia.gov/online-services/replace-license"
+  ],
+  "category": "identification",
+  "jurisdiction": "Virginia",
+  "disaster_types": [
+    "general"
+  ],
+  "needs": [
+    "identification_replacement"
+  ],
+  "barriers": [
+    "lost_identification"
+  ],
+  "priority": 85,
+  "content": "If your Virginia driver's license is lost, stolen, or damaged, you can get a replacement. You may replace it online unless certain conditions apply (such as being under 18, having an expired credential, needing a name change, or owing DMV fees); the online process reuses your existing photograph. In person at a DMV customer service center you need a completed Driver's License and Identification Card Application, one proof of identity document (additional documents for REAL ID), a new photograph taken on site, and payment of fees. A replacement license costs $20 (an additional $10 one-time fee for REAL ID).",
+  "required_information": [
+    "Driver's License and Identification Card Application (in person)",
+    "One proof of identity document (in person; more for REAL ID)",
+    "Replacement fee ($20 for a license)"
+  ],
+  "next_action": "Check whether you can replace your Virginia driver's license online; if not, visit a DMV customer service center.",
+  "last_verified": "2026-09-25"
+}
