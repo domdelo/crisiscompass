@@ -77,3 +77,16 @@ def test_empty_passport_returns_empty_recovery_state():
     assert state.plan == []
     assert state.resources == []
     assert state.next_best_action is None
+
+
+def test_unknown_need_is_ignored_without_overwriting_passport():
+    passport = make_passport(
+        disaster="flood",
+        immediate_needs=["unknown_future_need", "food"],
+    )
+
+    state = build_recovery_state(passport)
+
+    assert state.passport == passport
+    assert [step.category for step in state.plan] == ["food"]
+    assert state.next_best_action == "Locate emergency food assistance."
