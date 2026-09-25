@@ -16,9 +16,6 @@ export function RecoveryJourney({ steps }: RecoveryJourneyProps) {
   const [expandedCategory, setExpandedCategory] = useState<string | null>(
     null
   );
-  const [checkedByCategory, setCheckedByCategory] = useState<
-    Record<string, boolean[]>
-  >({});
   const [completedCategories, setCompletedCategories] = useState<Set<string>>(
     new Set()
   );
@@ -28,22 +25,6 @@ export function RecoveryJourney({ steps }: RecoveryJourneyProps) {
 
   function isDone(step: RecoveryStep): boolean {
     return step.status === "done" || completedCategories.has(step.category);
-  }
-
-  function getChecked(category: string, length: number): boolean[] {
-    return checkedByCategory[category] ?? Array(length).fill(false);
-  }
-
-  function toggleChecklistItem(category: string, itemIndex: number) {
-    const content = getJourneyContent(category);
-    const current = getChecked(category, content.checklist.length);
-    const next = current.map((value, i) => (i === itemIndex ? !value : value));
-
-    setCheckedByCategory((prev) => ({ ...prev, [category]: next }));
-
-    if (next.every(Boolean)) {
-      setCompletedCategories((prev) => new Set(prev).add(category));
-    }
   }
 
   function toggleStepComplete(category: string) {
@@ -72,7 +53,6 @@ export function RecoveryJourney({ steps }: RecoveryJourneyProps) {
           const isExpanded = expandedCategory === step.category;
           const panelId = `${panelIdBase}-${step.category}`;
           const content = getJourneyContent(step.category);
-          const checked = getChecked(step.category, content.checklist.length);
 
           return (
             <li key={`${step.category}-${index}`} className="w-full">
@@ -134,33 +114,29 @@ export function RecoveryJourney({ steps }: RecoveryJourneyProps) {
                   </p>
                   <p className="mt-1 text-sm text-muted">{content.guidance}</p>
 
-                  <ul className="mt-3 flex flex-col gap-2">
-                    {content.checklist.map((item, itemIndex) => {
-                      const itemId = `${panelId}-item-${itemIndex}`;
-                      return (
-                        <li key={itemId} className="flex items-start gap-2">
-                          <input
-                            id={itemId}
-                            type="checkbox"
-                            checked={checked[itemIndex] ?? false}
-                            onChange={() =>
-                              toggleChecklistItem(step.category, itemIndex)
-                            }
-                            className="mt-1 h-4 w-4 shrink-0 rounded border-border text-primary focus-visible:outline-none"
-                          />
-                          <label
-                            htmlFor={itemId}
-                            className={`text-sm ${
-                              checked[itemIndex]
-                                ? "text-muted line-through"
-                                : "text-foreground"
-                            }`}
-                          >
-                            {item}
-                          </label>
-                        </li>
-                      );
-                    })}
+                  <ul className="mt-3 flex flex-col gap-3">
+                    {content.links.map((link) => (
+                      <li
+                        key={link.url}
+                        className="rounded-md border border-border bg-background p-3"
+                      >
+                        <p className="text-sm font-semibold text-foreground">
+                          {link.title}
+                        </p>
+                        <p className="text-xs text-muted">{link.agency}</p>
+                        <p className="mt-1 text-sm text-foreground">
+                          {link.description}
+                        </p>
+                        <a
+                          href={link.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-primary underline"
+                        >
+                          Visit {link.agency} &#8599;
+                        </a>
+                      </li>
+                    ))}
                   </ul>
 
                   <button
