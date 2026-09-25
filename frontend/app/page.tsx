@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ApiError, buildRecoveryPlan, getResources } from "@/lib/api";
 import { IntakeForm } from "@/components/IntakeForm";
 import { RecoveryPassport } from "@/components/RecoveryPassport";
@@ -22,6 +22,13 @@ export default function Home() {
   const [resourcesError, setResourcesError] = useState<string | null>(null);
   const [showScamShield, setShowScamShield] = useState(false);
   const [showEscalation, setShowEscalation] = useState(false);
+  const recoveryHeadingRef = useRef<HTMLHeadingElement>(null);
+
+  useEffect(() => {
+    if (recovery) {
+      recoveryHeadingRef.current?.focus();
+    }
+  }, [recovery]);
 
   async function handleIntakeSuccess(passport: RecoveryPassportData) {
     setRecoveryError(null);
@@ -79,6 +86,10 @@ export default function Home() {
 
       {recovery && (
         <div className="flex w-full flex-col gap-6">
+          <h1 ref={recoveryHeadingRef} tabIndex={-1} className="sr-only">
+            Your recovery plan
+          </h1>
+
           <RecoveryPassport passport={recovery.passport} />
 
           {recovery.next_best_action && (

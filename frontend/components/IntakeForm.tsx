@@ -5,7 +5,7 @@ import { ApiError, submitIntake } from "@/lib/api";
 import type { RecoveryPassport } from "@/lib/types";
 
 interface IntakeFormProps {
-  onSuccess: (passport: RecoveryPassport) => void;
+  onSuccess: (passport: RecoveryPassport) => void | Promise<void>;
 }
 
 export function IntakeForm({ onSuccess }: IntakeFormProps) {
@@ -30,7 +30,7 @@ export function IntakeForm({ onSuccess }: IntakeFormProps) {
 
     try {
       const passport = await submitIntake({ message });
-      onSuccess(passport);
+      await onSuccess(passport);
     } catch (error) {
       setStatus("error");
       setErrorMessage(
