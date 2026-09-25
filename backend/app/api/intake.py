@@ -1,9 +1,13 @@
+import logging
 import re
 
 from fastapi import APIRouter
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
 
 from app.models.survivor import RecoveryPassport
+from app.services.foundry import generate_recovery_passport
+
+logger = logging.getLogger(__name__)
 
 
 router = APIRouter()
@@ -137,18 +141,7 @@ def _next_best_action(needs: list[str]) -> str:
     return "Talk to a specialist about your next step."
 
 
-@router.post("/intake", response_model=RecoveryPassport)
-async def intake(request: IntakeRequest):
-    """
-    Process a survivor's description of their situation.
-
-    This is a lightweight rule-based mock (keyword matching), not the
-    real Microsoft Foundry intake intelligence -- it exists so the
-    frontend demo reflects what a survivor actually typed. The AI
-    engine will replace this implementation later.
-    """
-
-    message = request.message
+def _keyword_fallback_passport(message: str) -> RecoveryPassport:
     lowered = message.lower()
 
     needs, barriers = _detect_needs_and_barriers(lowered)
@@ -167,3 +160,28 @@ async def intake(request: IntakeRequest):
         },
         next_best_action=_next_best_action(needs)
     )
+
+
+@router.post("/intake", response_model=RecoveryPassport)
+async def intake(request: IntakeRequest):
+    """
+    Process a survivor's description of their situation.
+
+    Tries the Foundry-hosted model first; falls back to a lightweight
+    rule-based mock (keyword matching) if Foundry isn't configured, is
+    unreachable, or returns something that doesn't validate as a
+    RecoveryPassport -- so the demo never hard-fails.
+    """
+
+    foundry_result = generate_recovery_passport(request.message)
+
+    if foundry_result is not None:
+        try:
+            return RecoveryPassport(**foundry_result)
+        except ValidationError:
+            logger.exception(
+                "Foundry intake response failed validation; "
+                "falling back to mock"
+            )
+
+    return _keyword_fallback_passport(request.message)
