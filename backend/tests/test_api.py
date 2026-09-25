@@ -268,12 +268,24 @@ def test_escalation():
 
     data = response.json()
 
+    assert set(data) == {"escalated", "handoff_summary"}
     assert data["escalated"] is True
 
     summary = data["handoff_summary"]
 
+    assert set(summary) == {
+        "disaster",
+        "location",
+        "immediate_needs",
+        "household_summary",
+        "barriers",
+        "actions_taken",
+        "reason_for_escalation",
+        "sensitive_data_collected",
+    }
     assert summary["disaster"] == "flood"
     assert summary["location"] == "Fairfax County, VA"
+    assert summary["immediate_needs"] == MARIA_PASSPORT["immediate_needs"]
 
     assert (
         summary["household_summary"]
@@ -283,6 +295,7 @@ def test_escalation():
     assert "lost_identification" in summary["barriers"]
 
     assert len(summary["actions_taken"]) == 2
+    assert "Immediate safety concern" in summary["reason_for_escalation"]
 
     assert (
         "No SSN" in summary["sensitive_data_collected"]
