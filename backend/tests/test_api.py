@@ -178,6 +178,11 @@ def test_recovery():
 
 
 def test_scam_check():
+    """
+    Maria's scenario: a message impersonating FEMA that demands an
+    upfront payment. Should trigger multiple grounded warning signs
+    and a possible_scam risk level.
+    """
     response = client.post(
         "/api/scam-check",
         json={
@@ -193,10 +198,54 @@ def test_scam_check():
     data = response.json()
 
     assert data["risk"] == "possible_scam"
+    assert len(data["warning_signs"]) >= 2
+    assert any("payment" in w.lower() for w in data["warning_signs"])
+    assert data["recommendation"]
+    assert data["source_title"]
+    assert data["source_url"].startswith("https://")
 
-    assert "Requests payment" in data["warning_signs"]
 
-    assert data["source_url"]
+def test_scam_check_flags_suspicious_link():
+    response = client.post(
+        "/api/scam-check",
+        json={
+            "message": (
+                "Your disaster relief payment is ready. Click here to "
+                "claim it now: http://fema-relief-claims.info/verify"
+            )
+        }
+    )
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert data["risk"] in ("possible_scam", "suspicious")
+    assert any("link" in w.lower() for w in data["warning_signs"])
+
+
+def test_scam_check_does_not_flag_benign_message():
+    """
+    Scam Shield should not cry wolf on ordinary disaster-related
+    messages that show none of the tracked warning signs.
+    """
+    response = client.post(
+        "/api/scam-check",
+        json={
+            "message": (
+                "Hi, this is a reminder that the Fairfax County "
+                "emergency shelter on Main Street is open tonight for "
+                "anyone who needs a safe place to stay."
+            )
+        }
+    )
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert data["risk"] == "no_warning_signs_detected"
+    assert data["warning_signs"] == []
 
 
 def test_scam_check_rejects_empty_message():
