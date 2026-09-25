@@ -7,6 +7,7 @@ import { RecoveryPassport } from "@/components/RecoveryPassport";
 import { NextBestAction } from "@/components/NextBestAction";
 import { RecoveryJourney } from "@/components/RecoveryJourney";
 import { ResourceCard } from "@/components/ResourceCard";
+import { ScamShield } from "@/components/ScamShield";
 import type {
   RecoveryPassport as RecoveryPassportData,
   RecoveryState,
@@ -18,6 +19,7 @@ export default function Home() {
   const [recoveryError, setRecoveryError] = useState<string | null>(null);
   const [resources, setResources] = useState<ResourceRecommendation[]>([]);
   const [resourcesError, setResourcesError] = useState<string | null>(null);
+  const [showScamShield, setShowScamShield] = useState(false);
 
   async function handleIntakeSuccess(passport: RecoveryPassportData) {
     setRecoveryError(null);
@@ -108,6 +110,20 @@ export default function Home() {
               )
             )}
           </section>
+
+          <div className="flex w-full flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={() => setShowScamShield((prev) => !prev)}
+              className="rounded-full border border-primary px-5 py-2.5 text-sm font-semibold text-primary hover:bg-primary/5"
+            >
+              {showScamShield
+                ? "Hide scam check"
+                : "Check a suspicious message"}
+            </button>
+          </div>
+
+          {showScamShield && <ScamShield />}
         </div>
       )}
     </div>
