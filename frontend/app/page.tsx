@@ -22,7 +22,17 @@ export default function Home() {
   const [resourcesError, setResourcesError] = useState<string | null>(null);
   const [showScamShield, setShowScamShield] = useState(false);
   const [showEscalation, setShowEscalation] = useState(false);
+  const [startedAction, setStartedAction] = useState<string | null>(null);
   const recoveryHeadingRef = useRef<HTMLHeadingElement>(null);
+  const resourcesRef = useRef<HTMLDivElement>(null);
+
+  function handleStart(action: string) {
+    setStartedAction(action);
+    resourcesRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  }
 
   useEffect(() => {
     if (recovery) {
@@ -60,6 +70,8 @@ export default function Home() {
     }
   }
 
+  const nextBestAction = recovery?.next_best_action ?? null;
+
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col items-start justify-center gap-8 px-6 py-16 sm:px-8">
       {!recovery && (
@@ -92,13 +104,21 @@ export default function Home() {
 
           <RecoveryPassport passport={recovery.passport} />
 
-          {recovery.next_best_action && (
-            <NextBestAction action={recovery.next_best_action} />
+          {nextBestAction && (
+            <NextBestAction
+              action={nextBestAction}
+              started={startedAction === nextBestAction}
+              onStart={() => handleStart(nextBestAction)}
+            />
           )}
 
-          <RecoveryJourney steps={recovery.plan} />
+          <RecoveryJourney steps={recovery.plan} startedAction={startedAction} />
 
-          <section aria-label="Trusted Resources" className="w-full">
+          <section
+            ref={resourcesRef}
+            aria-label="Trusted Resources"
+            className="w-full scroll-mt-4"
+          >
             <h2 className="text-xs font-semibold uppercase tracking-wide text-muted">
               Trusted Resources
             </h2>

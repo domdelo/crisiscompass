@@ -1,9 +1,14 @@
 interface NextBestActionProps {
   action: string;
+  started?: boolean;
   onStart?: () => void;
 }
 
-export function NextBestAction({ action, onStart }: NextBestActionProps) {
+export function NextBestAction({
+  action,
+  started = false,
+  onStart,
+}: NextBestActionProps) {
   return (
     <section
       aria-label="Next Best Action"
@@ -19,7 +24,7 @@ export function NextBestAction({ action, onStart }: NextBestActionProps) {
           onClick={onStart}
           className="shrink-0 rounded-full bg-action-contrast px-5 py-2.5 text-sm font-semibold text-action transition-colors hover:bg-action-contrast/90"
         >
-          Start &rarr;
+          {started ? "Started ✓ — view resources" : "Start →"}
         </button>
       </div>
     </section>

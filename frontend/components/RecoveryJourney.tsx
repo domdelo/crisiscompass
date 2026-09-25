@@ -2,13 +2,17 @@ import type { RecoveryStep } from "@/lib/types";
 
 interface RecoveryJourneyProps {
   steps: RecoveryStep[];
+  startedAction?: string | null;
 }
 
 function titleCase(value: string): string {
   return value.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-export function RecoveryJourney({ steps }: RecoveryJourneyProps) {
+export function RecoveryJourney({
+  steps,
+  startedAction = null,
+}: RecoveryJourneyProps) {
   if (steps.length === 0) return null;
 
   const firstPendingIndex = steps.findIndex(
@@ -24,6 +28,7 @@ export function RecoveryJourney({ steps }: RecoveryJourneyProps) {
         {steps.map((step, index) => {
           const isCurrent = index === firstPendingIndex;
           const isDone = step.status === "done";
+          const isStarted = !isDone && step.action === startedAction;
 
           return (
             <li
@@ -59,7 +64,7 @@ export function RecoveryJourney({ steps }: RecoveryJourneyProps) {
               </span>
               {isCurrent && (
                 <span className="text-xs font-semibold uppercase tracking-wide text-primary">
-                  Current
+                  {isStarted ? "In Progress" : "Current"}
                 </span>
               )}
             </li>
