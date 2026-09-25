@@ -1,7 +1,9 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
+from fastapi.concurrency import run_in_threadpool
 from pydantic import BaseModel, Field
 
 from app.models.survivor import RecoveryPassport
+from app.services import foundry
 
 
 router = APIRouter()
@@ -13,30 +15,15 @@ class IntakeRequest(BaseModel):
 
 @router.post("/intake", response_model=RecoveryPassport)
 async def intake(request: IntakeRequest):
-    """
-    Process a survivor's description of their situation.
+    """Process a survivor's description into a Recovery Passport."""
 
-    This currently returns mocked demo data.
-    Microsoft Foundry will replace the mock implementation later.
-    """
-
-    return RecoveryPassport(
-        disaster="flood",
-        location="Fairfax County, VA",
-        household={
-            "children": 2
-        },
-        immediate_needs=[
-            "emergency_housing",
-            "food",
-            "identification_replacement"
-        ],
-        barriers=[
-            "unsafe_home",
-            "lost_identification"
-        ],
-        documents={
-            "identification": "missing"
-        },
-        next_best_action="Find safe housing tonight."
-    )
+    try:
+        return await run_in_threadpool(
+            foundry.generate_recovery_passport,
+            request.message,
+        )
+    except (foundry.FoundryConfigurationError, foundry.FoundryResponseError):
+        raise HTTPException(
+            status_code=503,
+            detail="The intake AI service is temporarily unavailable.",
+        ) from None

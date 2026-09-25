@@ -53,7 +53,38 @@ def test_health():
     }
 
 
-def test_intake():
+def test_intake(monkeypatch):
+    generated_passport = {
+        "disaster": "flood",
+        "location": None,
+        "household": {
+            "adults": None,
+            "children": 2
+        },
+        "immediate_needs": [
+            "emergency_housing",
+            "identification_replacement"
+        ],
+        "barriers": [
+            "unsafe_home",
+            "lost_identification"
+        ],
+        "documents": {
+            "identification": "missing",
+            "proof_of_residence": "unknown",
+            "damage_documentation": "unknown",
+            "insurance_claim": "unknown"
+        },
+        "next_best_action": (
+            "Seek emergency housing and assistance with replacing "
+            "identification."
+        )
+    }
+    monkeypatch.setattr(
+        "app.services.foundry.generate_recovery_passport",
+        lambda _message: generated_passport,
+    )
+
     response = client.post(
         "/api/intake",
         json={
@@ -69,7 +100,7 @@ def test_intake():
     data = response.json()
 
     assert data["disaster"] == "flood"
-    assert data["location"] == "Fairfax County, VA"
+    assert data["location"] is None
     assert data["household"]["children"] == 2
 
     assert "emergency_housing" in data["immediate_needs"]
@@ -79,7 +110,10 @@ def test_intake():
 
     assert (
         data["next_best_action"]
-        == "Find safe housing tonight."
+        == (
+            "Seek emergency housing and assistance with replacing "
+            "identification."
+        )
     )
 
 
@@ -92,6 +126,27 @@ def test_intake_rejects_empty_message():
     )
 
     assert response.status_code == 422
+
+
+def test_intake_returns_safe_error_when_foundry_is_unavailable(monkeypatch):
+    def unavailable(_message):
+        from app.services.foundry import FoundryResponseError
+
+        raise FoundryResponseError("provider detail must not be exposed")
+
+    monkeypatch.setattr(
+        "app.services.foundry.generate_recovery_passport",
+        unavailable,
+    )
+    response = client.post(
+        "/api/intake",
+        json={"message": "Our apartment flooded."},
+    )
+
+    assert response.status_code == 503
+    assert response.json() == {
+        "detail": "The intake AI service is temporarily unavailable."
+    }
 
 
 def test_resources():
