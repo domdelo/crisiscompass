@@ -1,15 +1,14 @@
 "use client";
 
+import Link from "next/link";
 import { useId, useState } from "react";
+import { ResourceLinkCard } from "@/components/ResourceLinkCard";
+import { titleCase } from "@/lib/format";
 import type { RecoveryStep } from "@/lib/types";
 import { getJourneyContent } from "@/lib/journeyContent";
 
 interface RecoveryJourneyProps {
   steps: RecoveryStep[];
-}
-
-function titleCase(value: string): string {
-  return value.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 export function RecoveryJourney({ steps }: RecoveryJourneyProps) {
@@ -116,36 +115,25 @@ export function RecoveryJourney({ steps }: RecoveryJourneyProps) {
 
                   <ul className="mt-3 flex flex-col gap-3">
                     {content.links.map((link) => (
-                      <li
-                        key={link.url}
-                        className="rounded-md border border-border bg-background p-3"
-                      >
-                        <p className="text-sm font-semibold text-foreground">
-                          {link.title}
-                        </p>
-                        <p className="text-xs text-muted">{link.agency}</p>
-                        <p className="mt-1 text-sm text-foreground">
-                          {link.description}
-                        </p>
-                        <a
-                          href={link.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-primary underline"
-                        >
-                          Visit {link.agency} &#8599;
-                        </a>
-                      </li>
+                      <ResourceLinkCard key={link.url} link={link} />
                     ))}
                   </ul>
 
-                  <button
-                    type="button"
-                    onClick={() => toggleStepComplete(step.category)}
-                    className="mt-4 rounded-full border border-primary px-4 py-2 text-xs font-semibold text-primary hover:bg-primary/5"
-                  >
-                    {done ? "Mark as not done" : "Mark step complete"}
-                  </button>
+                  <div className="mt-4 flex flex-wrap items-center gap-3">
+                    <Link
+                      href={`/guide?step=${encodeURIComponent(step.category)}`}
+                      className="rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-contrast hover:bg-primary-dark"
+                    >
+                      Get personalized help &rarr;
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => toggleStepComplete(step.category)}
+                      className="rounded-full border border-primary px-4 py-2 text-xs font-semibold text-primary hover:bg-primary/5"
+                    >
+                      {done ? "Mark as not done" : "Mark step complete"}
+                    </button>
+                  </div>
                 </div>
               )}
             </li>
