@@ -9,9 +9,11 @@ import { RecoveryJourney } from "@/components/RecoveryJourney";
 import { ResourceCard } from "@/components/ResourceCard";
 import { ScamShield } from "@/components/ScamShield";
 import { HumanEscalation } from "@/components/HumanEscalation";
+import { titleCase } from "@/lib/format";
 import {
   clearSession,
   saveSession,
+  updateSession,
   useHydrated,
   useStoredSession,
 } from "@/lib/session";
@@ -25,10 +27,13 @@ export default function Home() {
   const session = useStoredSession();
   const recovery = session?.recovery ?? null;
   const resources = session?.resources ?? [];
+  const completedSteps = session?.completedSteps ?? [];
+  const escalation = session?.escalation ?? null;
   const hasRecovery = recovery !== null;
 
   const [recoveryError, setRecoveryError] = useState<string | null>(null);
   const [resourcesError, setResourcesError] = useState<string | null>(null);
+  const [resourcesLoading, setResourcesLoading] = useState(false);
   const [showScamShield, setShowScamShield] = useState(false);
   const [showEscalation, setShowEscalation] = useState(false);
   const recoveryHeadingRef = useRef<HTMLHeadingElement>(null);
@@ -39,9 +44,36 @@ export default function Home() {
     }
   }, [hasRecovery]);
 
+  async function loadResources(passport: RecoveryPassportData) {
+    setResourcesLoading(true);
+    setResourcesError(null);
+    const passportKey = JSON.stringify(passport);
+
+    try {
+      const { resources: found } = await getResources({
+        location: passport.location ?? "",
+        needs: passport.immediate_needs,
+        barriers: passport.barriers,
+      });
+      // Skip if the survivor started over while this request was in flight.
+      updateSession((current) =>
+        JSON.stringify(current.recovery.passport) === passportKey
+          ? { ...current, resources: found }
+          : current
+      );
+    } catch (error) {
+      setResourcesError(
+        error instanceof ApiError
+          ? error.message
+          : "Couldn't load trusted resources right now."
+      );
+    } finally {
+      setResourcesLoading(false);
+    }
+  }
+
   async function handleIntakeSuccess(passport: RecoveryPassportData) {
     setRecoveryError(null);
-    setResourcesError(null);
 
     let state: RecoveryState;
     try {
@@ -55,21 +87,7 @@ export default function Home() {
       return;
     }
     saveSession({ recovery: state, resources: [] });
-
-    try {
-      const { resources: found } = await getResources({
-        location: passport.location ?? "",
-        needs: passport.immediate_needs,
-        barriers: passport.barriers,
-      });
-      saveSession({ recovery: state, resources: found });
-    } catch (error) {
-      setResourcesError(
-        error instanceof ApiError
-          ? error.message
-          : "Couldn't load trusted resources right now."
-      );
-    }
+    await loadResources(passport);
   }
 
   function handleStartOver() {
@@ -139,17 +157,34 @@ export default function Home() {
             <NextBestAction action={nextBestAction} guideHref={guideHref} />
           )}
 
-          <RecoveryJourney steps={recovery.plan} />
+          <RecoveryJourney
+            steps={recovery.plan}
+            completedSteps={completedSteps}
+          />
 
-          <section aria-label="Trusted Resources" className="w-full">
+          <section
+            aria-label="Trusted Resources"
+            aria-busy={resourcesLoading}
+            className="w-full"
+          >
             <h2 className="text-xs font-semibold uppercase tracking-wide text-muted">
               Trusted Resources
             </h2>
 
             {resourcesError && (
-              <p role="alert" className="mt-2 text-sm text-danger">
-                {resourcesError}
-              </p>
+              <div
+                role="alert"
+                className="mt-2 flex flex-wrap items-center gap-3 rounded-md bg-danger-bg px-3 py-2 text-sm text-danger"
+              >
+                <span>{resourcesError}</span>
+                <button
+                  type="button"
+                  onClick={() => loadResources(recovery.passport)}
+                  className="font-semibold underline"
+                >
+                  Try again
+                </button>
+              </div>
             )}
 
             {resources.length > 0 ? (
@@ -158,6 +193,10 @@ export default function Home() {
                   <ResourceCard key={resource.name} resource={resource} />
                 ))}
               </ul>
+            ) : resourcesLoading ? (
+              <p className="mt-2 text-sm text-muted">
+                Finding trusted resources for your situation&hellip;
+              </p>
             ) : (
               !resourcesError && (
                 <p className="mt-2 text-sm text-muted">
@@ -171,29 +210,55 @@ export default function Home() {
             <button
               type="button"
               onClick={() => setShowScamShield((prev) => !prev)}
+              aria-expanded={showScamShield}
               className="rounded-full border border-primary px-5 py-2.5 text-sm font-semibold text-primary hover:bg-primary/5"
             >
               {showScamShield
                 ? "Hide scam check"
                 : "Check a suspicious message"}
             </button>
-            <button
-              type="button"
-              onClick={() => setShowEscalation((prev) => !prev)}
-              className="rounded-full border border-primary px-5 py-2.5 text-sm font-semibold text-primary hover:bg-primary/5"
-            >
-              {showEscalation ? "Hide human help" : "Get human help"}
-            </button>
+            {!escalation && (
+              <button
+                type="button"
+                onClick={() => setShowEscalation((prev) => !prev)}
+                aria-expanded={showEscalation}
+                className="rounded-full border border-primary px-5 py-2.5 text-sm font-semibold text-primary hover:bg-primary/5"
+              >
+                {showEscalation ? "Hide human help" : "Get human help"}
+              </button>
+            )}
           </div>
 
-          {showScamShield && <ScamShield />}
+          {showScamShield && (
+            <ScamShield
+              saved={session?.scamCheck ?? null}
+              onChecked={(message, result) =>
+                updateSession((current) => ({
+                  ...current,
+                  scamCheck: { message, result },
+                }))
+              }
+            />
+          )}
 
-          {showEscalation && (
+          {(showEscalation || escalation) && (
             <HumanEscalation
               passport={recovery.passport}
-              actionsTaken={resources.map(
-                (resource) => `${resource.name} resources reviewed`
-              )}
+              actionsTaken={[
+                ...resources.map(
+                  (resource) => `${resource.name} resources reviewed`
+                ),
+                ...completedSteps.map(
+                  (step) => `${titleCase(step)} step completed`
+                ),
+              ]}
+              result={escalation}
+              onEscalated={(result) =>
+                updateSession((current) => ({
+                  ...current,
+                  escalation: result,
+                }))
+              }
             />
           )}
         </div>

@@ -237,7 +237,7 @@ const documents: GuideStep = {
         tips.push(
           "Your state's DMV handles driver's licenses and state IDs. Some states lower or waive fees after a declared disaster, so ask."
         );
-        links.push(LINKS.usaGov);
+        links.push(LINKS.stateDmv);
         break;
       case "ssn":
         tips.push("Replacement Social Security cards are free.");
@@ -247,13 +247,13 @@ const documents: GuideStep = {
         tips.push(
           "Birth certificates come from the vital records office in the state where you were born."
         );
-        links.push(LINKS.usaVitalRecords);
+        links.push(LINKS.birthCertificate);
         break;
       default:
         tips.push(
           "You usually need a photo ID to replace other documents, so start with your driver's license or state ID."
         );
-        links.push(LINKS.usaGov, LINKS.usaVitalRecords);
+        links.push(LINKS.stateDmv, LINKS.usaDocuments);
     }
 
     if (answers.other_id === "yes") {

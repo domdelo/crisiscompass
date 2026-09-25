@@ -1,13 +1,28 @@
 import { useMemo, useSyncExternalStore } from "react";
-import type { RecoveryState, ResourceRecommendation } from "@/lib/types";
+import type { GuideAnswers } from "@/lib/guideContent";
+import type {
+  EscalationResponse,
+  RecoveryState,
+  ResourceRecommendation,
+  ScamCheckResponse,
+} from "@/lib/types";
 
-// Kept in sessionStorage (cleared when the tab closes) so the plan
-// survives navigating to /guide and back without being persisted long-term.
+// Kept in sessionStorage (cleared when the tab closes) so progress survives
+// navigation and refreshes without lingering on a shared or borrowed device.
 const STORAGE_KEY = "crisiscompass:session";
+
+export interface GuideProgress {
+  answers: GuideAnswers;
+  position: number;
+}
 
 export interface StoredSession {
   recovery: RecoveryState;
   resources: ResourceRecommendation[];
+  guideProgress?: Record<string, GuideProgress>;
+  completedSteps?: string[];
+  escalation?: EscalationResponse;
+  scamCheck?: { message: string; result: ScamCheckResponse };
 }
 
 const listeners = new Set<() => void>();
@@ -38,6 +53,30 @@ export function saveSession(session: StoredSession) {
     // Storage unavailable (e.g. private mode): the plan just won't persist.
   }
   notify();
+}
+
+export function updateSession(
+  update: (session: StoredSession) => StoredSession
+) {
+  const raw = readRaw();
+  if (!raw) return;
+  try {
+    saveSession(update(JSON.parse(raw) as StoredSession));
+  } catch {
+    // Corrupt stored value: leave it; the next full save replaces it.
+  }
+}
+
+export function setStepComplete(category: string, complete: boolean) {
+  updateSession((session) => {
+    const others = (session.completedSteps ?? []).filter(
+      (step) => step !== category
+    );
+    return {
+      ...session,
+      completedSteps: complete ? [...others, category] : others,
+    };
+  });
 }
 
 export function clearSession() {

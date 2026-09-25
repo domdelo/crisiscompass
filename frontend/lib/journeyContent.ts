@@ -20,7 +20,7 @@ export const JOURNEY_CONTENT: Record<string, JourneyStepContent> = {
   documents: {
     guidance:
       "Losing identification can make it harder to access other help, so replacing it early is worthwhile.",
-    links: [LINKS.usaVitalRecords, LINKS.ssa],
+    links: [LINKS.usaDocuments, LINKS.stateDmv],
   },
   insurance: {
     guidance:

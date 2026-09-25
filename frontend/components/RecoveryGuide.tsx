@@ -11,8 +11,14 @@ import {
   type GuideAnswers,
   type GuideQuestion,
 } from "@/lib/guideContent";
-import { useHydrated, useStoredSession } from "@/lib/session";
-import type { RecoveryState } from "@/lib/types";
+import {
+  setStepComplete,
+  updateSession,
+  useHydrated,
+  useStoredSession,
+  type GuideProgress,
+  type StoredSession,
+} from "@/lib/session";
 
 interface RecoveryGuideProps {
   initialStep: string | null;
@@ -44,32 +50,34 @@ export function RecoveryGuide({ initialStep }: RecoveryGuideProps) {
     );
   }
 
-  return (
-    <GuideFlow recovery={session.recovery} initialStep={initialStep} />
-  );
+  return <GuideFlow session={session} initialStep={initialStep} />;
 }
 
 function tabId(category: string) {
   return `guide-tab-${category}`;
 }
 
+function saveProgress(category: string, progress: GuideProgress) {
+  updateSession((session) => ({
+    ...session,
+    guideProgress: { ...session.guideProgress, [category]: progress },
+  }));
+}
+
 interface GuideFlowProps {
-  recovery: RecoveryState;
+  session: StoredSession;
   initialStep: string | null;
 }
 
-function GuideFlow({ recovery, initialStep }: GuideFlowProps) {
-  const { plan: steps, passport } = recovery;
+function GuideFlow({ session, initialStep }: GuideFlowProps) {
+  const { plan: steps, passport } = session.recovery;
+  const completedSteps = session.completedSteps ?? [];
 
   const [activeCategory, setActiveCategory] = useState(
     steps.some((step) => step.category === initialStep)
       ? (initialStep as string)
       : steps[0]?.category ?? "general"
   );
-  const [answersByCategory, setAnswersByCategory] = useState<
-    Record<string, GuideAnswers>
-  >({});
-  const [positions, setPositions] = useState<Record<string, number>>({});
 
   const headingRef = useRef<HTMLHeadingElement>(null);
   const shouldFocusHeading = useRef(false);
@@ -79,10 +87,10 @@ function GuideFlow({ recovery, initialStep }: GuideFlowProps) {
   );
   const activeStep = steps[activeIndex];
   const guide = getGuideStep(activeCategory);
-  const answers =
-    answersByCategory[activeCategory] ?? initialAnswers(guide, passport);
+  const saved = session.guideProgress?.[activeCategory];
+  const answers = saved?.answers ?? initialAnswers(guide, passport);
   const questions = askableQuestions(guide, passport, answers);
-  const position = positions[activeCategory] ?? 0;
+  const position = Math.min(saved?.position ?? 0, questions.length);
   const finished = position >= questions.length;
   const nextStep = steps[activeIndex + 1];
 
@@ -94,18 +102,16 @@ function GuideFlow({ recovery, initialStep }: GuideFlowProps) {
   }, [activeCategory, position]);
 
   function isComplete(category: string): boolean {
-    if (positions[category] === undefined) return false;
-    const stepGuide = getGuideStep(category);
-    const stepAnswers =
-      answersByCategory[category] ?? initialAnswers(stepGuide, passport);
-    return (
-      positions[category] >=
-      askableQuestions(stepGuide, passport, stepAnswers).length
-    );
+    return completedSteps.includes(category);
   }
 
   function selectTab(category: string) {
     setActiveCategory(category);
+    window.history.replaceState(
+      null,
+      "",
+      `/guide?step=${encodeURIComponent(category)}`
+    );
   }
 
   function handleTabKeyDown(
@@ -136,33 +142,36 @@ function GuideFlow({ recovery, initialStep }: GuideFlowProps) {
     }
     kept[question.id] = value;
 
+    const nextPosition = index + 1;
+    const nowFinished =
+      nextPosition >= askableQuestions(guide, passport, kept).length;
+
     shouldFocusHeading.current = true;
-    setAnswersByCategory((prev) => ({ ...prev, [activeCategory]: kept }));
-    setPositions((prev) => ({ ...prev, [activeCategory]: index + 1 }));
+    saveProgress(activeCategory, { answers: kept, position: nextPosition });
+    if (nowFinished) setStepComplete(activeCategory, true);
   }
 
   function goBack() {
     shouldFocusHeading.current = true;
-    setPositions((prev) => ({
-      ...prev,
-      [activeCategory]: Math.max(0, position - 1),
-    }));
+    saveProgress(activeCategory, {
+      answers,
+      position: Math.max(0, position - 1),
+    });
   }
 
   function retake() {
     shouldFocusHeading.current = true;
-    setAnswersByCategory((prev) => {
-      const next = { ...prev };
-      delete next[activeCategory];
-      return next;
+    saveProgress(activeCategory, {
+      answers: initialAnswers(guide, passport),
+      position: 0,
     });
-    setPositions((prev) => ({ ...prev, [activeCategory]: 0 }));
+    setStepComplete(activeCategory, false);
   }
 
   function goToNextStep() {
     if (!nextStep) return;
     shouldFocusHeading.current = true;
-    setActiveCategory(nextStep.category);
+    selectTab(nextStep.category);
   }
 
   const currentQuestion = questions[position];

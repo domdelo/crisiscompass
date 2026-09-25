@@ -5,16 +5,17 @@ export interface ResourceLink {
   url: string;
 }
 
-// Placeholder links to well-known agencies for the demo -- not verified
-// live and not personalized to anyone's eligibility. Replace with grounded,
-// verified sources from the resource engine before real survivors use this.
+// Checked on 2026-09-25: all load except ssa.gov and naic.org, which block
+// automated requests (official agency homepages). General guidance only --
+// not personalized to eligibility. Prefer grounded sources from the
+// resource engine as they become available.
 export const LINKS = {
   redCrossShelter: {
     title: "Find an Open Shelter",
     agency: "American Red Cross",
     description:
       "Locate emergency shelters near you, including options for families.",
-    url: "https://www.redcross.org/get-help",
+    url: "https://www.redcross.org/get-help.html",
   },
   ready: {
     title: "Disaster Safety Guidance",
@@ -45,24 +46,31 @@ export const LINKS = {
   },
   dsnap: {
     title: "Disaster Food Assistance (D-SNAP)",
-    agency: "USDA Food and Nutrition Service",
+    agency: "USDA Food and Nutrition Administration",
     description:
       "Check whether Disaster SNAP or replacement SNAP benefits are available in your state.",
-    url: "https://www.fns.usda.gov/disaster",
+    url: "https://www.fna.usda.gov/disaster",
   },
-  usaGov: {
-    title: "Replace Lost Documents",
+  stateDmv: {
+    title: "Find Your State's DMV",
     agency: "USA.gov",
     description:
-      "Official guides to replacing IDs and other documents, including your state's DMV.",
-    url: "https://www.usa.gov/",
+      "Links to your state's motor vehicle office for replacing a driver's license or state ID.",
+    url: "https://www.usa.gov/state-motor-vehicle-services",
   },
-  usaVitalRecords: {
-    title: "Replace Vital Records",
+  usaDocuments: {
+    title: "Replace Vital Records and IDs",
     agency: "USA.gov",
     description:
-      "How to replace a birth certificate or other vital record from your state.",
-    url: "https://www.usa.gov/replace-vital-records",
+      "How to get copies of birth certificates, Social Security cards, and other documents.",
+    url: "https://www.usa.gov/request-documents",
+  },
+  birthCertificate: {
+    title: "Replace a Birth Certificate",
+    agency: "USA.gov",
+    description:
+      "How to get a certified copy of a U.S. birth certificate from your state.",
+    url: "https://www.usa.gov/birth-certificate",
   },
   ssa: {
     title: "Replace a Social Security Card",
@@ -96,6 +104,6 @@ export const LINKS = {
     agency: "U.S. Small Business Administration",
     description:
       "Low-interest federal disaster loans for homeowners, renters, and businesses.",
-    url: "https://www.sba.gov/funding-programs/disaster-assistance",
+    url: "https://www.sba.gov/disaster/",
   },
 } satisfies Record<string, ResourceLink>;

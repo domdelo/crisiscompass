@@ -16,13 +16,18 @@ function riskLabel(risk: string): string {
   );
 }
 
-export function ScamShield() {
-  const [message, setMessage] = useState("");
+interface ScamShieldProps {
+  saved: { message: string; result: ScamCheckResponse } | null;
+  onChecked: (message: string, result: ScamCheckResponse) => void;
+}
+
+export function ScamShield({ saved, onChecked }: ScamShieldProps) {
+  const [message, setMessage] = useState(saved?.message ?? "");
   const [status, setStatus] = useState<"idle" | "submitting" | "error">(
     "idle"
   );
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [result, setResult] = useState<ScamCheckResponse | null>(null);
+  const result = status === "submitting" ? null : saved?.result ?? null;
   const textareaId = useId();
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -36,11 +41,10 @@ export function ScamShield() {
 
     setStatus("submitting");
     setErrorMessage(null);
-    setResult(null);
 
     try {
       const response = await checkForScam({ message });
-      setResult(response);
+      onChecked(message, response);
       setStatus("idle");
     } catch (error) {
       setStatus("error");

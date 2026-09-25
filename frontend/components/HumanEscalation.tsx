@@ -7,18 +7,21 @@ import type { EscalationResponse, RecoveryPassport } from "@/lib/types";
 interface HumanEscalationProps {
   passport: RecoveryPassport;
   actionsTaken: string[];
+  result: EscalationResponse | null;
+  onEscalated: (result: EscalationResponse) => void;
 }
 
 export function HumanEscalation({
   passport,
   actionsTaken,
+  result,
+  onEscalated,
 }: HumanEscalationProps) {
   const [reason, setReason] = useState("");
   const [status, setStatus] = useState<"idle" | "submitting" | "error">(
     "idle"
   );
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [result, setResult] = useState<EscalationResponse | null>(null);
   const textareaId = useId();
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -39,7 +42,7 @@ export function HumanEscalation({
         reason,
         actions_taken: actionsTaken,
       });
-      setResult(response);
+      onEscalated(response);
       setStatus("idle");
     } catch (error) {
       setStatus("error");

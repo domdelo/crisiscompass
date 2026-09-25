@@ -4,38 +4,32 @@ import Link from "next/link";
 import { useId, useState } from "react";
 import { ResourceLinkCard } from "@/components/ResourceLinkCard";
 import { titleCase } from "@/lib/format";
+import { setStepComplete } from "@/lib/session";
 import type { RecoveryStep } from "@/lib/types";
 import { getJourneyContent } from "@/lib/journeyContent";
 
 interface RecoveryJourneyProps {
   steps: RecoveryStep[];
+  completedSteps: string[];
 }
 
-export function RecoveryJourney({ steps }: RecoveryJourneyProps) {
+export function RecoveryJourney({
+  steps,
+  completedSteps,
+}: RecoveryJourneyProps) {
   const [expandedCategory, setExpandedCategory] = useState<string | null>(
     null
-  );
-  const [completedCategories, setCompletedCategories] = useState<Set<string>>(
-    new Set()
   );
   const panelIdBase = useId();
 
   if (steps.length === 0) return null;
 
   function isDone(step: RecoveryStep): boolean {
-    return step.status === "done" || completedCategories.has(step.category);
+    return step.status === "done" || completedSteps.includes(step.category);
   }
 
-  function toggleStepComplete(category: string) {
-    setCompletedCategories((prev) => {
-      const next = new Set(prev);
-      if (next.has(category)) {
-        next.delete(category);
-      } else {
-        next.add(category);
-      }
-      return next;
-    });
+  function toggleStepComplete(step: RecoveryStep) {
+    setStepComplete(step.category, !isDone(step));
   }
 
   const firstPendingIndex = steps.findIndex((step) => !isDone(step));
@@ -128,7 +122,7 @@ export function RecoveryJourney({ steps }: RecoveryJourneyProps) {
                     </Link>
                     <button
                       type="button"
-                      onClick={() => toggleStepComplete(step.category)}
+                      onClick={() => toggleStepComplete(step)}
                       className="rounded-full border border-primary px-4 py-2 text-xs font-semibold text-primary hover:bg-primary/5"
                     >
                       {done ? "Mark as not done" : "Mark step complete"}

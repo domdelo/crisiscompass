@@ -1,36 +1,54 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CrisisCompass Frontend
 
-## Getting Started
+Next.js (App Router, TypeScript, Tailwind v4) frontend for CrisisCompass — *your next step when everything changes.*
 
-First, run the development server:
+## Run it
+
+The frontend talks to the FastAPI backend in `../backend` (default `http://localhost:8000`).
 
 ```bash
+# terminal 1 — backend
+cd backend
+source .venv/bin/activate
+uvicorn app.main:app --reload --port 8000
+
+# terminal 2 — frontend
+cd frontend
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+To point at a different backend, set `NEXT_PUBLIC_API_BASE_URL` in `frontend/.env.local` (gitignored). The backend must allow the frontend's origin via CORS.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Scripts
 
-## Learn More
+| Command         | What it does               |
+| --------------- | -------------------------- |
+| `npm run dev`   | Dev server with hot reload |
+| `npm run build` | Production build + type-check |
+| `npm run lint`  | ESLint                     |
 
-To learn more about Next.js, take a look at the following resources:
+## Pages
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `/` — intake ("Tell us what happened"), then the recovery plan: Recovery Passport, Next Best Action, Recovery Journey, Trusted Resources, Scam Shield, and human help.
+- `/guide?step=<category>` — guided questions for each Recovery Journey step, ending with tips and resources based on the answers and the Recovery Passport.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Where things live
 
-## Deploy on Vercel
+| Path                     | Purpose |
+| ------------------------ | ------- |
+| `lib/types.ts`           | TypeScript mirrors of the backend's Pydantic models — keep in sync with the API contracts |
+| `lib/api.ts`             | Typed client for all backend endpoints |
+| `lib/session.ts`         | Saves the plan and progress in `sessionStorage` (cleared when the tab closes) |
+| `lib/guideContent.ts`    | Guide questions and result logic per step |
+| `lib/journeyContent.ts`  | Short guidance and links shown in the Recovery Journey |
+| `lib/resourceLinks.ts`   | Every external resource link, defined once |
+| `components/`            | UI components |
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Notes
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Progress is kept in `sessionStorage`, not `localStorage`, so a survivor's situation doesn't linger on a shared or borrowed device after the tab closes. "Start over" on the plan page clears it.
+- Resource links were last checked on 2026-09-25. They're general guidance, not eligibility decisions — resource cards say "Potential match", never "You qualify".
+- The app never asks for SSNs, bank details, full birth dates, or exact addresses.
