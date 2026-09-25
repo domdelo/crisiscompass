@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { ResourceLinkCard } from "@/components/ResourceLinkCard";
 import { titleCase } from "@/lib/format";
+import { groupStepsByCategory, toResourceLink } from "@/lib/journeyContent";
 import {
   askableQuestions,
   getGuideStep,
@@ -50,6 +51,27 @@ export function RecoveryGuide({ initialStep }: RecoveryGuideProps) {
     );
   }
 
+  if (session.recovery.plan.length === 0) {
+    return (
+      <div className="mx-auto w-full max-w-3xl px-6 py-16 sm:px-8">
+        <h1 className="text-2xl font-semibold text-foreground">
+          We need a little more information
+        </h1>
+        <p className="mt-2 text-muted">
+          We couldn&apos;t identify specific recovery steps from your
+          description yet. Go back to your plan to talk to a person, or start
+          over and tell us more about what happened.
+        </p>
+        <Link
+          href="/"
+          className="mt-6 inline-flex rounded-full bg-action px-6 py-3 font-semibold text-action-contrast hover:bg-action-dark"
+        >
+          &larr; Back to my plan
+        </Link>
+      </div>
+    );
+  }
+
   return <GuideFlow session={session} initialStep={initialStep} />;
 }
 
@@ -70,13 +92,16 @@ interface GuideFlowProps {
 }
 
 function GuideFlow({ session, initialStep }: GuideFlowProps) {
-  const { plan: steps, passport } = session.recovery;
-  const completedSteps = session.completedSteps ?? [];
+  const { passport } = session.recovery;
+  const steps = groupStepsByCategory(
+    session.recovery.plan,
+    session.completedSteps ?? []
+  );
 
   const [activeCategory, setActiveCategory] = useState(
     steps.some((step) => step.category === initialStep)
       ? (initialStep as string)
-      : steps[0]?.category ?? "general"
+      : steps[0].category
   );
 
   const headingRef = useRef<HTMLHeadingElement>(null);
@@ -93,6 +118,9 @@ function GuideFlow({ session, initialStep }: GuideFlowProps) {
   const position = Math.min(saved?.position ?? 0, questions.length);
   const finished = position >= questions.length;
   const nextStep = steps[activeIndex + 1];
+  const officialSources = (
+    session.stepResources?.[activeCategory] ?? []
+  ).map(toResourceLink);
 
   useEffect(() => {
     if (shouldFocusHeading.current) {
@@ -102,7 +130,7 @@ function GuideFlow({ session, initialStep }: GuideFlowProps) {
   }, [activeCategory, position]);
 
   function isComplete(category: string): boolean {
-    return completedSteps.includes(category);
+    return steps.some((step) => step.category === category && step.done);
   }
 
   function selectTab(category: string) {
@@ -176,6 +204,9 @@ function GuideFlow({ session, initialStep }: GuideFlowProps) {
 
   const currentQuestion = questions[position];
   const result = finished ? guide.buildResult(answers, passport) : null;
+  const tailoredLinks = (result?.links ?? []).filter(
+    (link) => !officialSources.some((source) => source.url === link.url)
+  );
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-6 py-10 sm:px-8">
@@ -251,8 +282,15 @@ function GuideFlow({ session, initialStep }: GuideFlowProps) {
           Step {activeIndex + 1} of {steps.length}
         </p>
         <h2 className="mt-1 text-xl font-semibold text-foreground">
-          {activeStep?.action}
+          {activeStep.actions[0]}
         </h2>
+        {activeStep.actions.length > 1 && (
+          <ul className="mt-1 list-disc pl-5 text-sm text-muted">
+            {activeStep.actions.slice(1).map((action) => (
+              <li key={action}>{action}</li>
+            ))}
+          </ul>
+        )}
 
         {currentQuestion && (
           <div className="mt-5">
@@ -342,14 +380,33 @@ function GuideFlow({ session, initialStep }: GuideFlowProps) {
               </ul>
             )}
 
-            <h4 className="mt-6 text-xs font-semibold uppercase tracking-wide text-muted">
-              Resources for your situation
-            </h4>
-            <ul className="mt-2 flex flex-col gap-3">
-              {result.links.map((link) => (
-                <ResourceLinkCard key={link.url} link={link} />
-              ))}
-            </ul>
+            {officialSources.length > 0 && (
+              <>
+                <h4 className="mt-6 text-xs font-semibold uppercase tracking-wide text-muted">
+                  Official sources for your situation
+                </h4>
+                <ul className="mt-2 flex flex-col gap-3">
+                  {officialSources.map((link) => (
+                    <ResourceLinkCard key={link.url} link={link} />
+                  ))}
+                </ul>
+              </>
+            )}
+
+            {tailoredLinks.length > 0 && (
+              <>
+                <h4 className="mt-6 text-xs font-semibold uppercase tracking-wide text-muted">
+                  {officialSources.length > 0
+                    ? "More help based on your answers"
+                    : "Resources for your situation"}
+                </h4>
+                <ul className="mt-2 flex flex-col gap-3">
+                  {tailoredLinks.map((link) => (
+                    <ResourceLinkCard key={link.url} link={link} />
+                  ))}
+                </ul>
+              </>
+            )}
 
             <div className="mt-6 flex flex-wrap gap-3">
               {nextStep ? (

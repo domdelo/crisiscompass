@@ -10,16 +10,19 @@ import { ResourceCard } from "@/components/ResourceCard";
 import { ScamShield } from "@/components/ScamShield";
 import { HumanEscalation } from "@/components/HumanEscalation";
 import { titleCase } from "@/lib/format";
+import { CATEGORY_NEEDS } from "@/lib/journeyContent";
 import {
   clearSession,
   saveSession,
   updateSession,
   useHydrated,
   useStoredSession,
+  type StoredSession,
 } from "@/lib/session";
 import type {
   RecoveryPassport as RecoveryPassportData,
   RecoveryState,
+  ResourceRecommendation,
 } from "@/lib/types";
 
 export default function Home() {
@@ -44,10 +47,26 @@ export default function Home() {
     }
   }, [hasRecovery]);
 
-  async function loadResources(passport: RecoveryPassportData) {
+  async function loadResources(state: RecoveryState) {
+    const { passport } = state;
     setResourcesLoading(true);
     setResourcesError(null);
     const passportKey = JSON.stringify(passport);
+    const isCurrent = (current: StoredSession) =>
+      JSON.stringify(current.recovery.passport) === passportKey;
+
+    // Per-step searches feed the Recovery Journey and guide with official
+    // source_urls; a failed step just falls back to that step's default links.
+    const categories = [...new Set(state.plan.map((step) => step.category))];
+    const stepSearches = Promise.allSettled(
+      categories.map((category) =>
+        getResources({
+          location: passport.location ?? "",
+          needs: CATEGORY_NEEDS[category] ?? [category],
+          barriers: [],
+        })
+      )
+    );
 
     try {
       const { resources: found } = await getResources({
@@ -57,9 +76,7 @@ export default function Home() {
       });
       // Skip if the survivor started over while this request was in flight.
       updateSession((current) =>
-        JSON.stringify(current.recovery.passport) === passportKey
-          ? { ...current, resources: found }
-          : current
+        isCurrent(current) ? { ...current, resources: found } : current
       );
     } catch (error) {
       setResourcesError(
@@ -70,6 +87,19 @@ export default function Home() {
     } finally {
       setResourcesLoading(false);
     }
+
+    const results = await stepSearches;
+    const stepResources: Record<string, ResourceRecommendation[]> = {};
+    results.forEach((result, index) => {
+      if (result.status === "fulfilled") {
+        stepResources[categories[index]] = result.value.resources.filter(
+          (resource) => resource.source_url
+        );
+      }
+    });
+    updateSession((current) =>
+      isCurrent(current) ? { ...current, stepResources } : current
+    );
   }
 
   async function handleIntakeSuccess(passport: RecoveryPassportData) {
@@ -87,7 +117,7 @@ export default function Home() {
       return;
     }
     saveSession({ recovery: state, resources: [] });
-    await loadResources(passport);
+    await loadResources(state);
   }
 
   function handleStartOver() {
@@ -160,6 +190,7 @@ export default function Home() {
           <RecoveryJourney
             steps={recovery.plan}
             completedSteps={completedSteps}
+            stepResources={session?.stepResources ?? {}}
           />
 
           <section
@@ -179,7 +210,7 @@ export default function Home() {
                 <span>{resourcesError}</span>
                 <button
                   type="button"
-                  onClick={() => loadResources(recovery.passport)}
+                  onClick={() => loadResources(recovery)}
                   className="font-semibold underline"
                 >
                   Try again

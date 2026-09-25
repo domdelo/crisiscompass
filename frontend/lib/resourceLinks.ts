@@ -5,10 +5,11 @@ export interface ResourceLink {
   url: string;
 }
 
-// Checked on 2026-09-25: all load except ssa.gov and naic.org, which block
-// automated requests (official agency homepages). General guidance only --
-// not personalized to eligibility. Prefer grounded sources from the
-// resource engine as they become available.
+// Fallback links, shown only when the backend's grounded search returns no
+// resources for a step. Where the team's authoritative dataset
+// (data/government_sources) covers a topic, the URL here is that dataset's
+// source_url; the rest were checked live on 2026-09-25 (ssa.gov and naic.org
+// block automated checks). General guidance, not eligibility decisions.
 export const LINKS = {
   redCrossShelter: {
     title: "Find an Open Shelter",
@@ -32,11 +33,31 @@ export const LINKS = {
     url: "https://www.211.org/",
   },
   disasterAssistance: {
-    title: "Apply for Disaster Assistance",
-    agency: "DisasterAssistance.gov",
+    title: "Disaster Assistance",
+    agency: "Federal Emergency Management Agency",
     description:
-      "Check eligibility and apply for FEMA assistance and other federal aid.",
-    url: "https://www.disasterassistance.gov/",
+      "Learn about FEMA Individual Assistance and how to apply for federal disaster aid.",
+    url: "https://www.fema.gov/assistance/individual",
+  },
+  femaSheltering: {
+    title: "Sheltering and Temporary Housing Assistance",
+    agency: "Federal Emergency Management Agency",
+    description:
+      "FEMA options for emergency shelter and temporary housing after a disaster.",
+    url: "https://www.fema.gov/assistance/individual/sheltering-housing-options",
+  },
+  femaApplication: {
+    title: "FEMA Application Checklist",
+    agency: "Federal Emergency Management Agency",
+    description: "The basic information you'll need when you apply to FEMA.",
+    url: "https://www.fema.gov/node/what-basic-information-will-i-need-when-i-apply",
+  },
+  readyDocuments: {
+    title: "Important Documents for Disaster Recovery",
+    agency: "Ready.gov (FEMA)",
+    description:
+      "Which documents matter most for recovery and how to keep them safe.",
+    url: "https://www.ready.gov/financial-preparedness",
   },
   feedingAmerica: {
     title: "Find a Local Food Bank",
@@ -45,11 +66,11 @@ export const LINKS = {
     url: "https://www.feedingamerica.org/find-your-local-foodbank",
   },
   dsnap: {
-    title: "Disaster Food Assistance (D-SNAP)",
-    agency: "USDA Food and Nutrition Administration",
+    title: "Disaster SNAP (D-SNAP) and Disaster Nutrition Assistance",
+    agency: "U.S. Department of Agriculture",
     description:
       "Check whether Disaster SNAP or replacement SNAP benefits are available in your state.",
-    url: "https://www.fna.usda.gov/disaster",
+    url: "https://www.fna.usda.gov/disaster/nutrition-assistance-programs",
   },
   stateDmv: {
     title: "Find Your State's DMV",

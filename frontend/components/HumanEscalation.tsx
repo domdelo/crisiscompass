@@ -2,6 +2,7 @@
 
 import { useId, useState } from "react";
 import { ApiError, escalateToHuman } from "@/lib/api";
+import { titleCase } from "@/lib/format";
 import type { EscalationResponse, RecoveryPassport } from "@/lib/types";
 
 interface HumanEscalationProps {
@@ -74,7 +75,7 @@ export function HumanEscalation({
           {summary.disaster && (
             <div>
               <dt className="font-semibold text-foreground">Disaster</dt>
-              <dd className="text-muted">{summary.disaster}</dd>
+              <dd className="text-muted">{titleCase(summary.disaster)}</dd>
             </div>
           )}
           {summary.location && (
@@ -93,14 +94,16 @@ export function HumanEscalation({
                 Immediate needs
               </dt>
               <dd className="text-muted">
-                {summary.immediate_needs.join(", ")}
+                {summary.immediate_needs.map(titleCase).join(", ")}
               </dd>
             </div>
           )}
           {summary.barriers.length > 0 && (
             <div>
               <dt className="font-semibold text-foreground">Barriers</dt>
-              <dd className="text-muted">{summary.barriers.join(", ")}</dd>
+              <dd className="text-muted">
+                {summary.barriers.map(titleCase).join(", ")}
+              </dd>
             </div>
           )}
           {summary.actions_taken.length > 0 && (

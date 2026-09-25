@@ -106,14 +106,14 @@ const housing: GuideStep = {
         tips.push(
           "Ask FEMA whether Transitional Sheltering Assistance is available for this disaster."
         );
-        links.push(LINKS.disasterAssistance);
+        links.push(LINKS.femaSheltering);
         break;
       default:
         headline = "You're safe for now. Next, plan for the weeks ahead.";
         tips.push(
           "Apply for FEMA assistance even if you're staying with family. It may help with temporary housing costs later."
         );
-        links.push(LINKS.disasterAssistance);
+        links.push(LINKS.femaSheltering, LINKS.disasterAssistance);
     }
 
     if (answers.pets === "yes") {
@@ -380,8 +380,9 @@ const financialAssistance: GuideStep = {
     } else {
       headline = "Apply for FEMA assistance first.";
       tips.push(
-        "Apply at DisasterAssistance.gov. You'll be asked about your household, the damage, and your insurance."
+        "When you apply, you'll be asked about your household, the damage, and your insurance. FEMA's checklist shows what to have ready."
       );
+      links.push(LINKS.femaApplication);
     }
 
     if (answers.home === "own") {
@@ -445,8 +446,52 @@ const water: GuideStep = {
   },
 };
 
-const power: GuideStep = {
-  intro: "Power outages bring their own risks. Let's check yours.",
+const transportation: GuideStep = {
+  intro: "Getting where you need to go is part of recovery. Let's find you a way.",
+  questions: [
+    {
+      id: "need",
+      prompt: "Where do you most need to get to?",
+      options: [
+        { value: "shelter", label: "A shelter or safe place to stay" },
+        { value: "services", label: "Food, supplies, or aid sites" },
+        { value: "medical", label: "Medical care or a pharmacy" },
+      ],
+    },
+    {
+      id: "mobility",
+      prompt: "Does anyone need a wheelchair-accessible ride?",
+      options: YES_NO,
+    },
+  ],
+  buildResult: (answers) => {
+    const tips: string[] = [
+      "Call or text 211. They can connect you with local rides and transportation help.",
+    ];
+    let headline = "Let's get you a ride.";
+
+    if (answers.need === "medical") {
+      headline = "Getting to medical care comes first.";
+      tips.unshift("If it's an emergency, call 911. Don't wait for a ride.");
+    } else if (answers.need === "shelter") {
+      tips.push("Some shelters and relief organizations can arrange pickup. Ask when you call.");
+    }
+    if (answers.mobility === "yes") {
+      tips.push("Tell them you need a wheelchair-accessible vehicle when you ask for a ride.");
+    }
+
+    return {
+      headline,
+      tips,
+      links: answers.need === "shelter"
+        ? [LINKS.twoOneOne, LINKS.redCrossShelter]
+        : [LINKS.twoOneOne],
+    };
+  },
+};
+
+const utilities: GuideStep = {
+  intro: "Power and utility outages bring their own risks. Let's check yours.",
   questions: [
     {
       id: "medical_equipment",
@@ -535,7 +580,7 @@ const general: GuideStep = {
     } else if (answers.priority === "shelter") {
       tips.push("211 and the Red Cross can tell you which shelters are open near you.");
     } else {
-      tips.push("Start by applying for FEMA assistance at DisasterAssistance.gov.");
+      tips.push("Start by applying for FEMA Individual Assistance.");
     }
     return {
       headline: "Here's where to start.",
@@ -553,7 +598,8 @@ const GUIDE_STEPS: Record<string, GuideStep> = {
   insurance,
   financial_assistance: financialAssistance,
   water,
-  power,
+  transportation,
+  utilities,
   medical,
 };
 

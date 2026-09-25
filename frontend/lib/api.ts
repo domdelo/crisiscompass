@@ -44,13 +44,27 @@ async function postJson<TResponse>(
   }
 
   if (!response.ok) {
-    throw new ApiError(
-      `Request to ${path} failed with status ${response.status}.`,
-      response.status
-    );
+    throw new ApiError(await errorMessage(response), response.status);
   }
 
   return response.json() as Promise<TResponse>;
+}
+
+// FastAPI puts a plain-language string in `detail` for deliberate errors
+// (e.g. 503 "The intake AI service is temporarily unavailable."), but a
+// list of field errors for 422s -- only the string form is survivor-safe.
+async function errorMessage(response: Response): Promise<string> {
+  try {
+    const body = await response.json();
+    if (typeof body?.detail === "string") return body.detail;
+  } catch {
+    // Non-JSON error body: fall through to a generic message.
+  }
+
+  if (response.status === 422) {
+    return "Something in your request didn't look right. Please check it and try again.";
+  }
+  return "CrisisCompass is having trouble right now. Please try again in a moment.";
 }
 
 export function submitIntake(

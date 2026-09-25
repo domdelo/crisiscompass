@@ -19,6 +19,8 @@ export interface GuideProgress {
 export interface StoredSession {
   recovery: RecoveryState;
   resources: ResourceRecommendation[];
+  // Grounded resources from POST /api/resources, searched per journey step.
+  stepResources?: Record<string, ResourceRecommendation[]>;
   guideProgress?: Record<string, GuideProgress>;
   completedSteps?: string[];
   escalation?: EscalationResponse;
