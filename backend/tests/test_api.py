@@ -155,6 +155,56 @@ def test_resources_no_needs_returns_gracefully():
     assert isinstance(response.json()["resources"], list)
 
 
+def test_resources_handles_search_service_failure(monkeypatch):
+    """
+    If Azure AI Search is down/misconfigured/throttled, the API
+    must still respond gracefully rather than 500ing on a survivor.
+    """
+    import app.services.search as search_module
+
+    class FailingClient:
+        def search(self, **kwargs):
+            raise Exception("simulated Azure AI Search outage")
+
+    monkeypatch.setattr(search_module, "_get_client", lambda: FailingClient())
+
+    response = client.post(
+        "/api/resources",
+        json={
+            "location": "Fairfax County, VA",
+            "needs": ["emergency_housing"],
+            "barriers": []
+        }
+    )
+
+    assert response.status_code == 200
+    assert response.json()["resources"] == []
+
+
+def test_resources_rejects_malformed_request():
+    """location is a required field on the shared contract."""
+    response = client.post(
+        "/api/resources",
+        json={
+            "needs": ["food"]
+        }
+    )
+
+    assert response.status_code == 422
+
+
+def test_resources_rejects_wrong_types():
+    response = client.post(
+        "/api/resources",
+        json={
+            "location": "Fairfax County, VA",
+            "needs": "emergency_housing"  # should be a list, not a string
+        }
+    )
+
+    assert response.status_code == 422
+
+
 def test_recovery():
     response = client.post(
         "/api/recovery",
@@ -256,6 +306,11 @@ def test_scam_check_rejects_empty_message():
         }
     )
 
+    assert response.status_code == 422
+
+
+def test_scam_check_rejects_missing_message():
+    response = client.post("/api/scam-check", json={})
     assert response.status_code == 422
 
 
