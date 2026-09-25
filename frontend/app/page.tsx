@@ -112,7 +112,11 @@ export default function Home() {
             />
           )}
 
-          <RecoveryJourney steps={recovery.plan} startedAction={startedAction} />
+          <RecoveryJourney
+            steps={recovery.plan}
+            startedAction={startedAction}
+            onStepSelect={(step) => handleStart(step.action)}
+          />
 
           <section
             ref={resourcesRef}
