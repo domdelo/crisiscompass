@@ -149,14 +149,41 @@ def test_intake_returns_safe_error_when_foundry_is_unavailable(monkeypatch):
     }
 
 
-def test_resources():
+def test_resources(monkeypatch):
     """
     Maria's scenario: flooded apartment, two kids, unsafe home,
-    lost ID. Verifies the /api/resources contract shape and that
-    results are grounded in the authoritative government dataset
-    (not asserting exact content, since Azure AI Search ranking
-    can shift as the dataset or query text changes).
+    lost ID. Verifies the /api/resources contract without requiring
+    live Azure AI Search credentials or network access.
     """
+    search_request = {}
+
+    def stub_search_resources(location, needs, barriers):
+        search_request.update(
+            location=location,
+            needs=needs,
+            barriers=barriers,
+        )
+        return [
+            {
+                "name": "Emergency Shelter Assistance",
+                "agency": "Fairfax County Government",
+                "reason": (
+                    "This resource may be relevant based on needs you "
+                    "reported (emergency housing)."
+                ),
+                "source_title": "Fairfax Emergency Shelters",
+                "source_url": "https://www.fairfaxcounty.gov/familyservices/",
+                "required_information": ["Household size"],
+                "next_action": "Contact the county shelter hotline.",
+                "eligibility_status": "potential_match",
+            }
+        ]
+
+    monkeypatch.setattr(
+        "app.api.resources.search_resources",
+        stub_search_resources,
+    )
+
     response = client.post(
         "/api/resources",
         json={
@@ -178,6 +205,15 @@ def test_resources():
     data = response.json()
     resources = data["resources"]
 
+    assert search_request == {
+        "location": "Fairfax County, VA",
+        "needs": [
+            "emergency_housing",
+            "food",
+            "identification_replacement",
+        ],
+        "barriers": ["unsafe_home", "lost_identification"],
+    }
     assert len(resources) > 0
 
     for resource in resources:
