@@ -58,8 +58,9 @@ def test_intake():
         "/api/intake",
         json={
             "message": (
-                "Our apartment flooded. I have two kids and "
-                "we can't stay there tonight. I lost my wallet."
+                "Our apartment flooded in Fairfax County, VA. "
+                "I have two kids and we can't stay there tonight. "
+                "I lost my wallet."
             )
         }
     )
