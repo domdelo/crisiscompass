@@ -565,14 +565,3 @@ Potential future work includes:
 ## License
 
 Built for the Microsoft Innovation Studio Hackathon.
-
-```
-
-A couple of things I’d do after you paste it:
-- replace the repo URL if your actual GitHub URL is different
-- add your team member names if required
-- optionally add screenshots near the top
-- optionally add the hackathon challenge name directly under the title
-
-If you want, I can do the **architecture diagram next**, and then we can turn that into the PowerPoint.
-```
